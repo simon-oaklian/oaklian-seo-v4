@@ -941,16 +941,29 @@ def article_list(status: str = "pending", limit: int = 20, business: str = ""):
             cur.execute(
                 "select id, business, language, status, "
                 "coalesce(meta_json->>'title', left(raw_note, 60)) as title, "
-                "created_at from articles " + where_sql +
-                " order by created_at desc limit %s;",
+                "created_at, published_at, locked_slug, meta_json from articles " + where_sql +
+                " order by coalesce(published_at, created_at) desc limit %s;",
                 tuple(args)
             )
             rows = cur.fetchall()
+    def _published_url(row):
+        if row[3] != "published":
+            return None
+        meta = row[8] or {}
+        slug = row[7] or (meta.get("slug") if isinstance(meta, dict) else None)
+        if not slug:
+            return None
+        if row[1] == "oaklian" and row[2] == "en":
+            return f"https://oaklian.com/en/insights/{slug}/"
+        return None
+
     return {
         "count": len(rows),
         "articles": [
             {"id": r[0], "business": r[1], "language": r[2], "status": r[3],
-             "title": r[4], "created_at": r[5].isoformat() if r[5] else None}
+             "title": r[4], "created_at": r[5].isoformat() if r[5] else None,
+             "published_at": r[6].isoformat() if r[6] else None,
+             "published_url": _published_url(r)}
             for r in rows
         ]
     }

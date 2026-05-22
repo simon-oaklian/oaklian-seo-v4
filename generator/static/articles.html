@@ -82,9 +82,13 @@ function loadList(){
         var date=a.created_at?a.created_at.slice(0,10):'';
         html+='<div class="at-card">';
         html+='<a href="/static/article.html?id='+a.id+'" style="text-decoration:none;color:inherit">';
-        html+='<div class="meta">#'+a.id+' · '+date+'<span class="at-st '+a.status+'">'+stLabel(a.status)+'</span></div>';
+        var pubDate=a.published_at?a.published_at.slice(0,10):date;
+        html+='<div class="meta">#'+a.id+' · '+pubDate+'<span class="at-st '+a.status+'">'+stLabel(a.status)+'</span></div>';
         html+='<div class="title">'+escape(a.title||'(无标题)')+'</div>';
         html+='</a>';
+        if(a.status==='published' && a.published_url){
+          html+='<a class="at-gen" href="'+a.published_url+'" target="_blank" rel="noopener" style="text-decoration:none;background:#1e2a4a;margin-right:8px">打开前台</a>';
+        }
         if(a.status==='published'){
           html+='<button class="at-gen" onclick="genXhs('+a.id+',this)">转小红书</button>';
         }
