@@ -1,0 +1,10 @@
+{
+  "name": "Oaklian SEO Inbox",
+  "short_name": "SEO Inbox",
+  "start_url": "/static/inbox.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1e2a4a",
+  "icons": []
+}

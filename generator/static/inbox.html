@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SEO">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/app.css?v=2d61">
+<title>SEO 待审 - Oaklian</title>
+</head>
+<body>
+<header>
+  <h1>待审文章</h1>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a href="/analytics" title="数据后台" aria-label="数据后台" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;padding:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="6"  y1="20" x2="6"  y2="11"/>
+        <line x1="12" y1="20" x2="12" y2="5"/>
+        <line x1="18" y1="20" x2="18" y2="14"/>
+      </svg>
+    </a>
+    <!-- sprint2k1:kw-icon -->
+    <a href="/static/keywords.html" title="关键词" aria-label="关键词" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;padding:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+        <line x1="7" y1="7" x2="7.01" y2="7"/>
+      </svg>
+    </a>
+    <!-- sprint2k1c-a2-fix: shrunk '+ 新笔记' to icon-only to give header breathing room -->
+    <a href="/static/new.html" title="新笔记" aria-label="新笔记" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;padding:0;font-size:20px;line-height:1;text-decoration:none;color:inherit;">+</a>
+    <a href="/static/xhs.html" title="小红书" aria-label="小红书" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;padding:0;text-decoration:none;color:inherit;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </a>
+  </div>
+</header>
+<main id="main">
+  <div id="notif-container"></div>
+  <div id="article-container"><div class="empty">加载中…</div></div>
+</main>
+<script src="/static/app.js"></script>
+<script>
+async function loadNotifications() {
+  const box = document.getElementById('notif-container');
+  try {
+    const resp = await fetch('/api/notifications?status=unread', {credentials: 'same-origin'});
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (!data.notifications || data.notifications.length === 0) {
+      box.innerHTML = '';
+      return;
+    }
+    box.innerHTML = data.notifications.map(n => {
+      return '<a class="notif-card" data-id="' + n.id + '" href="' + (n.target_url || '#') + '">' +
+        '<span class="notif-title">' + escape(n.title) + '</span>' +
+        (n.body ? '<span class="notif-body">' + escape(n.body) + '</span>' : '') +
+        '</a>';
+    }).join('');
+    box.querySelectorAll('.notif-card').forEach(el => {
+      el.addEventListener('click', function(ev) {
+        const id = this.getAttribute('data-id');
+        try {
+          const blob = new Blob([], {type: 'application/json'});
+          navigator.sendBeacon('/api/notifications/' + id + '/read', blob);
+        } catch (e) {
+          fetch('/api/notifications/' + id + '/read', {method: 'POST', keepalive: true}).catch(() => {});
+        }
+      });
+    });
+  } catch (e) {
+  }
+}
+
+async function loadArticles() {
+  const main = document.getElementById('article-container');
+  try {
+    const data = await listArticles('pending');
+    if (!data.articles || data.articles.length === 0) {
+      main.innerHTML = '<div class="empty">暂无待审文章<br><br>点右上角「+ 新笔记」开始</div>';
+      return;
+    }
+    main.innerHTML = data.articles.map(a => {
+      const bizName = {oaklian:'Oaklian', jnono:'jnono', pricvo:'Pricvo'}[a.business] || a.business;
+      const date = a.created_at ? a.created_at.slice(0,10) : '';
+      return '<a class="card" href="/static/article.html?id=' + a.id + '">' +
+        '<span class="' + bizClass(a.business) + '">' + bizName + '</span>' +
+        '<span class="lang">' + a.language.toUpperCase() + '</span>' +
+        '<div class="title">' + escape(a.title || '(无标题)') + '</div>' +
+        '<div class="meta">#' + a.id + ' · ' + date + '</div>' +
+        '</a>';
+    }).join('');
+  } catch (e) {
+    showError(main, '加载失败: ' + e.message);
+  }
+}
+
+loadNotifications();
+loadArticles();
+</script>
+</body>
+</html>

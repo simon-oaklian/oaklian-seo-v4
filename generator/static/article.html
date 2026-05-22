@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/static/app.css">
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+<title>预览 - SEO</title>
+<style>
+/* §2.D draft preview image styling — mirrors published article CSS */
+.preview p { margin-bottom: 16px; line-height: 1.7; }
+.preview img {
+  display: block;
+  width: 100%;
+  max-width: 720px;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(15,29,58,0.10);
+  margin: 32px auto;
+  cursor: zoom-in;
+  transition: transform .15s ease;
+  position: relative;
+}
+.preview img:hover { transform: scale(1.01); }
+
+/* Lightbox */
+dialog.preview-lightbox {
+  border: none; padding: 0;
+  background: rgba(0,0,0,0.92);
+  max-width: 100vw; max-height: 100vh;
+  width: 100vw; height: 100vh; margin: 0; overflow: hidden;
+}
+dialog.preview-lightbox::backdrop { background: rgba(0,0,0,0.92); }
+dialog.preview-lightbox img {
+  max-width: 95vw; max-height: 95vh;
+  display: block; margin: auto;
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  cursor: zoom-out; border-radius: 4px;
+  aspect-ratio: auto; object-fit: contain;
+  width: auto; box-shadow: none;
+}
+dialog.preview-lightbox .lb-close {
+  position: absolute; top: 16px; right: 20px;
+  background: transparent; border: none;
+  color: #fff; font-size: 32px;
+  cursor: pointer; line-height: 1;
+  padding: 8px 12px; z-index: 10;
+}
+@media (max-width: 640px) {
+  .preview img { margin: 24px auto; }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hdr-title">文章预览</h1>
+  <a href="javascript:history.back()">← 返回</a>
+</header>
+<main id="main">
+  <div class="empty">加载中…</div>
+</main>
+
+<script src="/static/app.js"></script>
+<script>
+const params = new URLSearchParams(window.location.search);
+const articleId = parseInt(params.get('id'), 10);
+let editing = false;
+let currentArticle = null;
+
+async function load() {
+  const main = document.getElementById('main');
+  if (!articleId) { showError(main, '缺少文章 id'); return; }
+  try {
+    currentArticle = await getArticle(articleId);
+    render();
+  } catch (e) {
+    showError(main, '加载失败: ' + e.message);
+  }
+}
+
+function render() {
+  const main = document.getElementById('main');
+  const a = currentArticle;
+  const meta = a.meta || {};
+  const bizName = {oaklian:'Oaklian', jnono:'jnono', pricvo:'Pricvo'}[a.business] || a.business;
+  const facts = (meta.facts_used && meta.facts_used.length)
+    ? '<div class="facts"><strong>事实清单(从笔记):</strong><ul>' +
+      meta.facts_used.map(f => '<li>' + escape(f) + '</li>').join('') + '</ul></div>'
+    : '';
+
+  let body;
+  if (editing) {
+    body = '<textarea id="edit" style="min-height:400px">' + escape(a.draft_md || '') + '</textarea>' +
+           '<div class="btn-group">' +
+             '<button class="btn" id="cancel">取消</button>' +
+             '<button class="btn-primary" id="save" style="margin-top:0">保存</button>' +
+           '</div>';
+  } else {
+    body = '<div class="preview">' + (a.draft_md ? marked.parse(a.draft_md) : '(空)') + '</div>' +
+           '<div class="btn-group" style="margin-top:16px">' +
+             '<button class="btn" id="edit-btn">编辑</button>' +
+             '<button class="btn" id="publish-btn">发布</button>' +
+             '<button class="btn btn-danger" id="discard-btn">丢弃</button>' +
+           '</div>';
+  }
+
+  main.innerHTML =
+    '<div style="margin-bottom:12px">' +
+      '<span class="' + bizClass(a.business) + '">' + bizName + '</span>' +
+      '<span class="lang">' + (a.language||'').toUpperCase() + '</span>' +
+      ' <span style="color:#888;font-size:13px">#' + a.id + ' · ' + (a.status||'') + '</span>' +
+    '</div>' +
+    '<h2 style="margin:8px 0;color:#1e2a4a">' + escape(meta.title || '(无标题)') + '</h2>' +
+    (meta.meta_description ? '<p style="color:#666;font-size:14px">' + escape(meta.meta_description) + '</p>' : '') +
+    (meta.slug ? '<p style="color:#888;font-size:13px;font-family:monospace">slug: ' + escape(meta.slug) + '</p>' : '') +
+    facts +
+    body +
+    (editing ? '' : '<div id="xhs-zone" style="margin-top:18px"></div>');
+
+  if (editing) {
+    document.getElementById('cancel').onclick = () => { editing = false; render(); };
+    document.getElementById('save').onclick = onSave;
+  } else {
+    document.getElementById('edit-btn').onclick = () => { editing = true; render(); };
+    document.getElementById('publish-btn').onclick = onPublish;
+    document.getElementById('discard-btn').onclick = onDiscard;
+    loadXhsZone();
+  }
+}
+
+async function loadXhsZone() {
+  const zone = document.getElementById('xhs-zone');
+  if (!zone) return;
+  zone.innerHTML = '<span style="color:#999;font-size:13px">\u6b63\u5728\u67e5\u8be2\u5c0f\u7ea2\u4e66\u8349\u7a3f\u72b6\u6001...</span>';
+  let info;
+  try {
+    const r = await fetch('/api/xhs/by-article/' + articleId);
+    info = await r.json();
+  } catch (e) {
+    zone.innerHTML = '<span style="color:#c0392b;font-size:13px">\u5c0f\u7ea2\u4e66\u72b6\u6001\u67e5\u8be2\u5931\u8d25</span>';
+    return;
+  }
+  if (info && info.has_draft) {
+    zone.innerHTML =
+      '<div style="padding:12px 14px;background:#f0f7f0;border:1px solid #bcd9bc;border-radius:8px;font-size:14px;color:#2a5a2a">' +
+      '\u2705 \u5df2\u751f\u6210\u5c0f\u7ea2\u4e66\u8349\u7a3f #' + info.draft_id +
+      ' (' + (info.status || '') + ') &nbsp;' +
+      '<a href="/static/xhs.html" style="color:#1e2a4a;font-weight:600">\u53bb\u5c0f\u7ea2\u4e66\u9875\u9762\u67e5\u770b \u2192</a>' +
+      '</div>';
+  } else {
+    zone.innerHTML =
+      '<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#444;cursor:pointer;user-select:none;padding:10px 12px;background:#faf6ee;border:1px solid #e3d4b0;border-radius:8px">' +
+      '<input type="checkbox" id="pub-sync-xhs" style="width:18px;height:18px;cursor:pointer">' +
+      '<span>\u540c\u65f6\u751f\u6210\u5c0f\u7ea2\u4e66\u8349\u7a3f</span>' +
+      '<span style="color:#999;font-size:12px">(\u70b9\u201c\u53d1\u5e03\u201d\u540e\u4e00\u8d77\u751f\u6210,\u7a0d\u7b49\u7247\u523b)</span>' +
+      '</label>';
+  }
+}
+
+async function onSave() {
+  const newMd = document.getElementById('edit').value;
+  try {
+    await patchArticle(articleId, { draft_md: newMd });
+    currentArticle.draft_md = newMd;
+    editing = false;
+    render();
+  } catch (e) {
+    alert('保存失败: ' + e.message);
+  }
+}
+
+async function onDiscard() {
+  if (!confirm('确认丢弃这篇?不可恢复。')) return;
+  try {
+    await patchArticle(articleId, { status: 'discarded' });
+    window.location.href = '/static/inbox.html';
+  } catch (e) {
+    alert('丢弃失败: ' + e.message);
+  }
+}
+
+async function onPublish() {
+  // RULE1_AUDIT_CHECKLIST
+  const checklist = '发布前请最后审一遍 LLM 是否编造了笔记里没说的细节:\n\n' +
+    '□ 具体数字(尺寸、价格、时长、面积)\n' +
+    '□ 描述性细节(业主身高/体型/家庭情况、施工原因)\n' +
+    '□ 品牌名(Kohler / Moen / Daltile 等)\n' +
+    '□ 时间地点(具体日期、街区细节)\n\n' +
+    '确认全部来自笔记原文 → 点"确定"发布\n' +
+    '发现编造的 → 点"取消"回去改 draft';
+  if (!confirm(checklist)) return;
+  const btn = document.getElementById('publish-btn');
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '发布中...';
+  try {
+    const res = await fetch('/article/' + articleId + '/publish', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+    const syncChk = document.getElementById('pub-sync-xhs');
+    if (syncChk && syncChk.checked) {
+      btn.textContent = '正在生成小红书草稿...';
+      try {
+        const xr = await fetch('/api/articles/' + articleId + '/gen-xhs', { method: 'POST' });
+        const xd = await xr.json();
+        if (!xr.ok) throw new Error(xd.detail || ('HTTP ' + xr.status));
+        alert('发布成功,小红书草稿已生成!\n' + data.url);
+      } catch (xe) {
+        alert('发布成功,但小红书草稿生成失败: ' + xe.message + '\n可稍后在文章页重试。\n' + data.url);
+      }
+    } else {
+      alert('发布成功!\n' + data.url);
+    }
+    window.location.href = '/static/inbox.html';
+  } catch (e) {
+    alert('发布失败: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+
+// Wire up lightbox after every render() call.
+function bindPreviewLightbox() {
+  var lb = document.getElementById('preview-lb');
+  var lbImg = document.getElementById('preview-lb-img');
+  if (!lb || !lb.showModal) return;
+  document.querySelectorAll('.preview img').forEach(function(el) {
+    if (el._lbBound) return;
+    el._lbBound = true;
+    el.addEventListener('click', function() {
+      lbImg.src = el.currentSrc || el.src;
+      lbImg.alt = el.alt || '';
+      lb.showModal();
+    });
+  });
+  lb.onclick = function(e) {
+    if (e.target === lb || e.target === lbImg || e.target.classList.contains('lb-close')) lb.close();
+  };
+}
+
+// Wrap render() so we re-bind lightbox each time it's called.
+var _origRender = render;
+render = function() {
+  _origRender.apply(this, arguments);
+  if (!editing) setTimeout(bindPreviewLightbox, 0);
+};
+
+load();
+</script>
+<dialog class="preview-lightbox" id="preview-lb">
+  <button class="lb-close" aria-label="Close">&times;</button>
+  <img id="preview-lb-img" alt="">
+</dialog>
+</body>
+</html>

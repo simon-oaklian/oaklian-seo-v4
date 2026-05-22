@@ -1,0 +1,59 @@
+# Secrets and local environments
+.env
+.env.*
+*secret*
+*secrets*
+*credential*
+*credentials*
+*token*
+*oauth*
+*.pem
+*.key
+*.p12
+*.pfx
+generator/secrets/
+
+# Runtime data and generated output
+uploads/
+logs/
+site/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.sql
+
+# Python/runtime caches
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Backups/history snapshots
+*.bak
+*.bak.*
+*.bak_*
+*.pre_*
+*.before_*
+*.good_*
+*.sprint3*
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Avoid committing production compose with inline credentials
+docker-compose.yml
+docker-compose.yml.*
+
+# Local editor/system files
+.DS_Store
+._*
+.vscode/
+.cursor/
+*.bak*
+*.bak2*
+*.audiorec.*

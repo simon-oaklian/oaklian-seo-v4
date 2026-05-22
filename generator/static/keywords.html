@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SEO">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/app.css?v=2k1">
+<title>关键词 - Oaklian</title>
+<style>
+.kw-tabs {
+  display: flex;
+  gap: 0;
+  margin: 12px 0 16px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  padding: 3px;
+}
+.kw-tabs button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 9px 0;
+  font-size: 14px;
+  color: #555;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.kw-tabs button.active {
+  background: #fff;
+  color: #222;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0,0,0,.08);
+}
+.kw-filterbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 0 0 12px;
+  flex-wrap: nowrap;
+  font-size: 12px;
+  color: #555;
+}
+.kw-filterbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.kw-filterbar select, .kw-filterbar input[type=date] {
+  padding: 5px 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  font-family: inherit;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.kw-filterbar input[type=date] {
+  width: 100%;
+  max-width: 130px;
+}
+.kw-filterbar #date-range {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.kw-filterbar.history-mode #date-range {
+  display: inline-flex;
+}
+.kw-group {
+  margin-bottom: 18px;
+}
+.kw-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  margin: 6px 0 8px;
+  padding-left: 2px;
+}
+.kw-item {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kw-item .kw-text {
+  flex: 1;
+  font-size: 15px;
+  color: #222;
+  word-break: break-word;
+}
+.kw-item .kw-badges {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.kw-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.kw-badge.rising { background: #fff4e5; color: #b86b00; }
+.kw-badge.breakout { background: #ffe5e5; color: #c0202d; }
+.kw-badge.count { background: #eef4ff; color: #2c5db7; }
+.kw-badge.vol { background: #f0f0f0; color: #555; }
+.kw-meta {
+  font-size: 11px;
+  color: #999;
+  margin-top: 2px;
+}
+/* sprint2k1c-a4: schedule control panel */
+.sched-panel {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 10px;
+  margin: 12px 0 0;
+  overflow: hidden;
+}
+.sched-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: #fafafa;
+}
+.sched-header-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555;
+}
+.sched-header-left svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.sched-header .caret {
+  font-size: 11px;
+  color: #999;
+  transition: transform 0.15s;
+}
+.sched-panel.open .sched-header .caret {
+  transform: rotate(180deg);
+}
+.sched-body {
+  display: none;
+  padding: 8px 14px 12px;
+  border-top: 1px solid #f0f0f0;
+}
+.sched-panel.open .sched-body {
+  display: block;
+}
+.sched-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #eee;
+  font-size: 12px;
+}
+.sched-row:last-child {
+  border-bottom: none;
+}
+.sched-biz {
+  font-weight: 600;
+  color: #222;
+  min-width: 64px;
+  flex-shrink: 0;
+}
+.sched-row select {
+  padding: 4px 6px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.sched-last {
+  color: #888;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 11px;
+}
+.sched-trigger {
+  padding: 5px 10px;
+  border: 1px solid #2c5db7;
+  background: #fff;
+  color: #2c5db7;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.sched-trigger:active { opacity: 0.7; }
+.sched-trigger.queued {
+  background: #eef4ff;
+  color: #888;
+  cursor: not-allowed;
+  border-color: #ccd5e6;
+}
+.sched-toast {
+  display: none;
+  padding: 6px 10px;
+  margin: 4px 0 0;
+  background: #e7f3e7;
+  color: #2d6a2d;
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+}
+.sched-toast.show { display: block; }
+
+  /* sprint2k1f:seed-keywords */
+  .seed-row { margin: 8px 0 4px; padding: 8px 10px; background:#f7f8fa; border-radius:6px; font-size:13px; }
+  .seed-row-head { display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; color:#5a6478; }
+  .seed-row-head .caret { transition: transform .2s; }
+  .seed-row.open .seed-row-head .caret { transform: rotate(180deg); }
+  .seed-row-body { display:none; margin-top:8px; }
+  .seed-row.open .seed-row-body { display:block; }
+  .seed-list { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:8px; }
+  .seed-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#fff; border:1px solid #d8dce5; border-radius:14px; font-size:12px; }
+  .seed-chip .seed-test { cursor:pointer; opacity:.6; font-size:13px; padding:0 2px; }
+  .seed-chip .seed-test:hover { opacity:1; }
+  .seed-chip .seed-del { cursor:pointer; opacity:.5; font-size:14px; padding:0 2px; color:#a02020; }
+  .seed-chip .seed-del:hover { opacity:1; }
+  .seed-add { display:flex; gap:6px; }
+  .seed-add input { flex:1; padding:5px 8px; border:1px solid #d8dce5; border-radius:6px; font-size:13px; min-width:0; }
+  .seed-add button { padding:5px 12px; background:#3b4a6b; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
+  .seed-add button:disabled { opacity:.5; cursor:not-allowed; }
+  .seed-probe { margin-top:8px; padding:8px; background:#fff; border:1px dashed #c8cdda; border-radius:6px; font-size:12px; color:#5a6478; max-height:160px; overflow-y:auto; }
+  .seed-probe.error { background:#ffeded; border-color:#d04545; color:#a02020; }
+  .seed-empty { color:#9aa0ad; font-style:italic; font-size:12px; }
+  .probe-chip { display:inline-flex; align-items:center; gap:3px; padding:2px 6px; margin:2px; background:#f3f4f7; border-radius:10px; font-size:11px; }
+  .probe-chip .probe-add { cursor:pointer; color:#3b4a6b; font-weight:bold; padding:0 4px; }
+  .probe-chip .probe-add:hover { background:#3b4a6b; color:#fff; border-radius:8px; }
+.sched-toast.error { background: #fde7e7; color: #a33; }
+  margin: 8px 4px 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #5a6478;
+  background: #f3f4f7;
+  border-radius: 8px;
+  border-left: 3px solid #c8cdda;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<header>
+  <a href="javascript:history.back()" title="返回" aria-label="返回" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;padding:0;text-decoration:none;color:inherit;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </a>
+  <h1 style="flex:1;text-align:center;margin:0;">关键词</h1>
+  <div style="width:36px;"></div>
+</header>
+<main id="main">
+  <!-- sprint2k1c-a4: schedule control panel -->
+  <div class="sched-panel" id="sched-panel">
+    <div class="sched-header" id="sched-toggle">
+      <span class="sched-header-left">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span id="sched-summary">抓取调度</span>
+      </span>
+      <span class="caret">▼</span>
+    </div>
+    <div class="sched-body" id="sched-body">
+      <div class="empty">加载中…</div>
+    </div>
+  </div>
+  <div class="sched-toast" id="sched-toast"></div>
+  <div class="kw-tabs">
+    <button data-tab="today" class="active">最新</button>
+    <button data-tab="week">本周</button>
+    <button data-tab="history">历史</button>
+  </div>
+  <!-- sprint2k1:filterbar-singleline -->
+  <div class="kw-filterbar" id="filterbar">
+    <label>业务
+      <select id="biz-filter">
+        <option value="">全部</option>
+        <option value="oaklian">Oaklian</option>
+        <option value="jnono">jnono</option>
+        <option value="pricvo">Pricvo</option>
+        <option value="recossi">Recossi</option>
+      </select>
+    </label>
+    <span id="date-range">
+      <label>从<input type="date" id="date-from"></label>
+      <label>到<input type="date" id="date-to"></label>
+    </span>
+  </div>
+  <div id="content"><div class="empty">加载中…</div></div>
+</main>
+
+<script>
+function esc(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function bizLabel(b) {
+  return {oaklian:'Oaklian', jnono:'jnono', pricvo:'Pricvo', recossi:'Recossi'}[b] || b;
+}
+
+const state = {
+  tab: 'today',
+  biz: new URLSearchParams(location.search).get('biz') || ''
+};
+
+function setQueryBiz() {
+  const sel = document.getElementById('biz-filter');
+  if (state.biz) sel.value = state.biz;
+}
+
+function groupByBiz(items) {
+  const groups = {};
+  for (const it of items) {
+    const b = it.business || 'other';
+    if (!groups[b]) groups[b] = [];
+    groups[b].push(it);
+  }
+  return groups;
+}
+
+function renderTodayItem(it) {
+  /* SPRINT_2K1D_DISMISS_BTN */
+  const badges = [];
+  if (it.is_breakout) badges.push('<span class="kw-badge breakout">🔥 突发</span>');
+  if (it.is_rising) badges.push('<span class="kw-badge rising">↑ 上升</span>');
+  if (it.search_volume) badges.push('<span class="kw-badge vol">'+esc(it.search_volume)+'/月</span>');
+  return '<div class="kw-item" data-cand-id="'+it.id+'"><div class="kw-text">'+esc(it.keyword)+
+         '<div class="kw-meta">'+esc(it.source||'')+' · '+esc(it.fetched_date||'')+'</div>'+
+         '</div><div class="kw-badges">'+badges.join('')+
+         '<button class="kw-write" data-kw="'+esc(it.keyword)+'" data-biz="'+esc(it.business||'')+'" title="用此词写文章" aria-label="用此词写文章">✍</button>'+
+         '<button class="kw-dismiss" data-cand-id="'+it.id+'" title="剔除" aria-label="剔除">✕</button>'+
+         '</div></div>';
+}
+
+function renderAggItem(it) {
+  const badges = [];
+  badges.push('<span class="kw-badge count">×'+it.appearances+'</span>');
+  if (it.ever_breakout) badges.push('<span class="kw-badge breakout">🔥</span>');
+  if (it.ever_rising) badges.push('<span class="kw-badge rising">↑</span>');
+  if (it.max_volume) badges.push('<span class="kw-badge vol">'+esc(it.max_volume)+'/月</span>');
+  return '<div class="kw-item"><div class="kw-text">'+esc(it.keyword)+
+         '<div class="kw-meta">最近: '+esc(it.last_seen||'')+'</div>'+
+         '</div><div class="kw-badges">'+badges.join('')+
+         '<button class="kw-write" data-kw="'+esc(it.keyword)+'" data-biz="'+esc(it.business||'')+'" title="用此词写文章" aria-label="用此词写文章">✍</button>'+
+         '</div></div>';
+}
+
+function renderHistItem(it) {
+  const badges = [];
+  if (it.is_breakout) badges.push('<span class="kw-badge breakout">🔥</span>');
+  if (it.is_rising) badges.push('<span class="kw-badge rising">↑</span>');
+  if (it.search_volume) badges.push('<span class="kw-badge vol">'+esc(it.search_volume)+'</span>');
+  return '<div class="kw-item"><div class="kw-text">'+esc(it.keyword)+
+         '<div class="kw-meta">'+esc(it.fetched_date||'')+' · '+esc(it.source||'')+'</div>'+
+         '</div><div class="kw-badges">'+badges.join('')+
+         '<button class="kw-write" data-kw="'+esc(it.keyword)+'" data-biz="'+esc(it.business||'')+'" title="用此词写文章" aria-label="用此词写文章">✍</button>'+
+         '</div></div>';
+}
+
+function renderGrouped(items, renderItem) {
+  if (!items.length) {
+    return '<div class="empty">暂无数据</div>';
+  }
+  const groups = groupByBiz(items);
+  return Object.keys(groups).map(b =>
+    '<div class="kw-group"><div class="kw-group-title">'+esc(bizLabel(b))+' · '+groups[b].length+'</div>'+
+    groups[b].map(renderItem).join('')+
+    '</div>'
+  ).join('');
+}
+
+async function loadToday() {
+  const content = document.getElementById('content');
+  content.innerHTML = '<div class="empty">加载中…</div>';
+  const url = '/api/keywords/today' + (state.biz ? '?business='+encodeURIComponent(state.biz) : '');
+  try {
+    const r = await fetch(url, {credentials:'same-origin'});
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    content.innerHTML = renderGrouped(d.items || [], renderTodayItem);
+  } catch (e) {
+    content.innerHTML = '<div class="empty">加载失败: '+esc(e.message)+'</div>';
+  }
+}
+
+async function loadWeek() {
+  const content = document.getElementById('content');
+  content.innerHTML = '<div class="empty">加载中…</div>';
+  const url = '/api/keywords/aggregate?window=week' + (state.biz ? '&business='+encodeURIComponent(state.biz) : '');
+  try {
+    const r = await fetch(url, {credentials:'same-origin'});
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    content.innerHTML = renderGrouped(d.items || [], renderAggItem);
+  } catch (e) {
+    content.innerHTML = '<div class="empty">加载失败: '+esc(e.message)+'</div>';
+  }
+}
+
+async function loadHistory() {
+  const content = document.getElementById('content');
+  content.innerHTML = '<div class="empty">加载中…</div>';
+  const df = document.getElementById('date-from').value;
+  const dt = document.getElementById('date-to').value;
+  const params = new URLSearchParams();
+  if (state.biz) params.set('business', state.biz);
+  if (df) params.set('date_from', df);
+  if (dt) params.set('date_to', dt);
+  const url = '/api/keywords/history' + (params.toString() ? '?'+params.toString() : '');
+  try {
+    const r = await fetch(url, {credentials:'same-origin'});
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    content.innerHTML = renderGrouped(d.items || [], renderHistItem);
+  } catch (e) {
+    content.innerHTML = '<div class="empty">加载失败: '+esc(e.message)+'</div>';
+  }
+}
+
+/* === SPRINT_2K1D_DISMISS_BTN BEGIN === */
+async function dismissCandidate(id, btn) {
+  if (!id) return;
+  const card = btn.closest('.kw-item');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/keywords/dismiss/' + encodeURIComponent(id), {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (card) {
+      card.classList.add('kw-dismissing');
+      setTimeout(() => { if (card.parentNode) card.parentNode.removeChild(card); }, 240);
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '✕';
+    alert('剔除失败: ' + e.message);
+  }
+}
+document.addEventListener('click', function(ev) {
+  const b = ev.target.closest('.kw-dismiss');
+  if (!b) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  const id = b.getAttribute('data-cand-id');
+  dismissCandidate(id, b);
+});
+/* === SPRINT_2K1D_DISMISS_BTN END === */
+
+/* === SPRINT_2L1B_WRITE_BTN BEGIN === */
+document.addEventListener('click', function(ev) {
+  const b = ev.target.closest('.kw-write');
+  if (!b) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  const kw = b.getAttribute('data-kw') || '';
+  const biz = b.getAttribute('data-biz') || '';
+  if (kw) {
+    try {
+      sessionStorage.setItem('seo_v4_primary_keyword', kw);
+      if (biz) sessionStorage.setItem('seo_v4_primary_business_hint', biz);
+    } catch (e) { /* sessionStorage may fail in private mode; we proceed */ }
+  }
+  window.location.href = '/static/new.html';
+});
+/* === SPRINT_2L1B_WRITE_BTN END === */
+
+function setTab(name) {
+  state.tab = name;
+  document.querySelectorAll('.kw-tabs button').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-tab') === name);
+  });
+  document.getElementById('filterbar').classList.toggle('history-mode', name === 'history');
+  if (name === 'today') loadToday();
+  else if (name === 'week') loadWeek();
+  else if (name === 'history') loadHistory();
+}
+
+document.querySelectorAll('.kw-tabs button').forEach(b => {
+  b.addEventListener('click', () => setTab(b.getAttribute('data-tab')));
+});
+document.getElementById('biz-filter').addEventListener('change', (e) => {
+  state.biz = e.target.value;
+  setTab(state.tab);
+});
+['date-from','date-to'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (state.tab === 'history') loadHistory();
+  });
+});
+
+(function initDates() {
+  const today = new Date();
+  const ago = new Date(Date.now() - 30*86400000);
+  const fmt = d => d.toISOString().slice(0,10);
+  document.getElementById('date-from').value = fmt(ago);
+  document.getElementById('date-to').value = fmt(today);
+})();
+
+setQueryBiz();
+setTab('today');
+
+// sprint2k1c-a4: schedule control panel logic
+(function(){
+  const BIZ_LABEL = {oaklian:'Oaklian', pricvo:'Pricvo', recossi:'Recossi'};
+  const MODE_LABEL = {manual:'手动', weekly:'每周', monthly:'每月'};
+  const panel = document.getElementById('sched-panel');
+  const toggle = document.getElementById('sched-toggle');
+  const body = document.getElementById('sched-body');
+  const toast = document.getElementById('sched-toast');
+  let scheduleData = [];
+
+  function fmtRelative(iso) {
+    if (!iso) return '从未';
+    const now = new Date();
+    const then = new Date(iso);
+    const sec = Math.floor((now - then) / 1000);
+    if (sec < 60) return '刚刚';
+    if (sec < 3600) return Math.floor(sec/60) + ' 分钟前';
+    if (sec < 86400) return Math.floor(sec/3600) + ' 小时前';
+    if (sec < 86400*30) return Math.floor(sec/86400) + ' 天前';
+    return Math.floor(sec/86400/30) + ' 月前';
+  }
+
+  function showToast(msg, isError) {
+    toast.textContent = msg;
+    toast.className = 'sched-toast show' + (isError ? ' error' : '');
+    setTimeout(function(){ toast.className = 'sched-toast'; }, 2200);
+  }
+
+  function renderRows(items) {
+    if (!items.length) { body.innerHTML = '<div class="empty">无业务配置</div>'; return; }
+    body.innerHTML = items.map(function(it){
+      const label = BIZ_LABEL[it.business] || it.business;
+      const lastTxt = fmtRelative(it.last_run_at);
+      const pending = it.trigger_pending;
+      const opts = ['manual','weekly','monthly'].map(function(m){
+        return '<option value="'+m+'"'+(it.mode===m?' selected':'')+'>'+MODE_LABEL[m]+'</option>';
+      }).join('');
+      return '<div class="sched-row" data-biz="'+it.business+'">'
+        + '<span class="sched-biz">'+label+'</span>'
+        + '<select class="sched-mode">'+opts+'</select>'
+        + '<span class="sched-last">'+lastTxt+'</span>'
+        + '<button class="sched-trigger'+(pending?' queued':'')+'"'+(pending?' disabled':'')+'>'
+        + (pending?'已排队':'立即抓取')+'</button>'
+        + '</div>'
+        + '<div class="seed-row" data-biz="'+it.business+'">'
+        +   '<div class="seed-row-head">'
+        +     '<span>种子词 <span class="seed-count" data-biz-count="'+it.business+'">…</span></span>'
+        +     '<span class="caret">▼</span>'
+        +   '</div>'
+        +   '<div class="seed-row-body">'
+        +     '<div class="seed-list" data-biz-list="'+it.business+'"><span class="seed-empty">加载中…</span></div>'
+        +     '<div class="seed-add">'
+        +       '<input type="text" placeholder="新增种子词,如 heat pump rebate" maxlength="100">'
+        +       '<button class="seed-add-btn">添加</button>'
+        +     '</div>'
+        +     '<div class="seed-probe" data-biz-probe="'+it.business+'" style="display:none"></div>'
+        +   '</div>'
+        + '</div>';
+    }).join('');
+    // wire change/click events
+    body.querySelectorAll('.sched-row').forEach(function(row){
+      const biz = row.getAttribute('data-biz');
+      const sel = row.querySelector('.sched-mode');
+      const btn = row.querySelector('.sched-trigger');
+      sel.addEventListener('change', function(){
+        const mode = sel.value;
+        fetch('/api/schedule/'+encodeURIComponent(biz), {
+          method:'PUT',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({mode: mode})
+        }).then(function(r){ return r.ok ? r.json() : r.json().then(function(j){ throw new Error(j.detail||'更新失败'); }); })
+          .then(function(){ showToast(BIZ_LABEL[biz]+' 已设为 '+MODE_LABEL[mode]); })
+          .catch(function(e){ showToast('更新失败: '+e.message, true); });
+      });
+      btn.addEventListener('click', function(){
+        if (btn.classList.contains('queued')) return;
+        fetch('/api/keywords/trigger/'+encodeURIComponent(biz), {method:'POST'})
+          .then(function(r){ return r.ok ? r.json() : r.json().then(function(j){ throw new Error(j.detail||'排队失败'); }); })
+          .then(function(){
+            btn.classList.add('queued');
+            btn.disabled = true;
+            btn.textContent = '已排队';
+            showToast(BIZ_LABEL[biz]+' 已排队 · ~1 分钟内开始抓取');
+          })
+          .catch(function(e){ showToast('排队失败: '+e.message, true); });
+      });
+      wireSeedRow(row, biz);
+    });
+  }
+
+  function wireSeedRow(row, biz) {
+    const seedRow = row.parentNode.querySelector('.seed-row[data-biz="'+biz+'"]');
+    if (!seedRow) return;
+    const head = seedRow.querySelector('.seed-row-head');
+    const listEl = seedRow.querySelector('.seed-list');
+    const countEl = seedRow.querySelector('.seed-count');
+    const probeEl = seedRow.querySelector('.seed-probe');
+    const input = seedRow.querySelector('.seed-add input');
+    const addBtn = seedRow.querySelector('.seed-add-btn');
+    let loaded = false;
+    head.addEventListener('click', function(){
+      seedRow.classList.toggle('open');
+      if (seedRow.classList.contains('open') && !loaded) {
+        loaded = true;
+        loadSeeds();
+      }
+    });
+    function loadSeeds() {
+      fetch('/api/seed-keywords/'+encodeURIComponent(biz), {credentials:'same-origin'})
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){
+          if (!d) { listEl.innerHTML = '<span class="seed-empty">加载失败</span>'; return; }
+          countEl.textContent = '('+d.count+')';
+          if (!d.items.length) { listEl.innerHTML = '<span class="seed-empty">暂无种子词</span>'; return; }
+          listEl.innerHTML = d.items.map(function(it){
+            return '<span class="seed-chip" data-id="'+it.id+'">'
+              + '<span class="seed-kw">'+escHtml(it.keyword)+'</span>'
+              + '<span class="seed-test" title="试抓">🧪</span>'
+              + '<span class="seed-del" title="删除">×</span>'
+              + '</span>';
+          }).join('');
+          listEl.querySelectorAll('.seed-chip').forEach(function(chip){
+            const id = chip.getAttribute('data-id');
+            const kw = chip.querySelector('.seed-kw').textContent;
+            chip.querySelector('.seed-del').addEventListener('click', function(){
+              if (!confirm('删除种子词 "'+kw+'" ?')) return;
+              fetch('/api/seed-keywords/'+encodeURIComponent(biz)+'/'+id, {method:'DELETE'})
+                .then(function(r){ return r.ok ? r.json() : r.json().then(function(j){ throw new Error(j.detail||'删除失败'); }); })
+                .then(function(){ showToast('已删除 '+kw); loadSeeds(); })
+                .catch(function(e){ showToast('删除失败: '+e.message, true); });
+            });
+            chip.querySelector('.seed-test').addEventListener('click', function(){
+              probeEl.style.display = 'block';
+              probeEl.classList.remove('error');
+              probeEl.textContent = '试抓 "'+kw+'" 中… (约 30 秒,成本约 $0.0023)';
+              fetch('/api/seed-keywords/'+encodeURIComponent(biz)+'/test', {
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({keyword: kw})
+              }).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.detail||'试抓失败'); return j; }); })
+                .then(function(d){
+                  probeEl.classList.remove('error');
+                  const rising = (d.rising||[]).slice(0,10);
+                  const top = (d.top||[]).slice(0,10);
+                  function chips(arr) {
+                    if (!arr.length) return '<i>无</i>';
+                    return arr.map(function(w){
+                      return '<span class="probe-chip" data-kw="'+escHtml(w)+'">'+escHtml(w)+' <span class="probe-add" title="加为种子">+</span></span>';
+                    }).join(' ');
+                  }
+                  probeEl.innerHTML = '<b>'+escHtml(kw)+'</b> 试抓结果 · 点 + 加入候选库写文章用<br>'
+                    + '<div style="margin-top:6px">↑ 上升 ('+rising.length+'): ' + chips(rising) + '</div>'
+                    + '<div style="margin-top:6px">★ 热门 ('+top.length+'): ' + chips(top) + '</div>';
+                  probeEl.querySelectorAll('.probe-add').forEach(function(btn){
+                    btn.addEventListener('click', function(e){
+                      e.stopPropagation();
+                      const chip = btn.closest('.probe-chip');
+                      const newKw = chip.getAttribute('data-kw');
+                      btn.textContent = '…';
+                      fetch('/api/keywords/add-candidate/'+encodeURIComponent(biz), {
+                        method:'POST',
+                        headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({keyword: newKw, source_seed: kw, kind: 'probe'})
+                      }).then(function(r){ return r.ok ? r.json() : r.json().then(function(j){ throw new Error(j.detail||'添加失败'); }); })
+                        .then(function(){
+                          chip.style.opacity = '0.4';
+                          btn.textContent = '✓';
+                          showToast('已入候选库: '+newKw);
+                        })
+                        .catch(function(e){
+                          btn.textContent = '+';
+                          showToast('添加失败: '+e.message, true);
+                        });
+                    });
+                  });
+                })
+                .catch(function(e){
+                  probeEl.classList.add('error');
+                  probeEl.textContent = '试抓失败: ' + e.message;
+                });
+            });
+          });
+        });
+    }
+    function addSeed() {
+      const kw = input.value.trim();
+      if (!kw) return;
+      addBtn.disabled = true;
+      fetch('/api/seed-keywords/'+encodeURIComponent(biz), {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({keyword: kw})
+      }).then(function(r){ return r.ok ? r.json() : r.json().then(function(j){ throw new Error(j.detail||'添加失败'); }); })
+        .then(function(){ input.value=''; showToast('已添加 '+kw); loadSeeds(); })
+        .catch(function(e){ showToast('添加失败: '+e.message, true); })
+        .finally(function(){ addBtn.disabled = false; });
+    }
+    addBtn.addEventListener('click', addSeed);
+    input.addEventListener('keydown', function(e){ if (e.key === 'Enter') addSeed(); });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function loadSchedule() {
+    fetch('/api/schedule', {credentials:'same-origin'})
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){
+        if (!d || !d.items) return;
+        scheduleData = d.items;
+        renderRows(scheduleData);
+        // Update summary chip
+        const modes = scheduleData.map(function(it){
+          return (BIZ_LABEL[it.business]||it.business) + ':' + (MODE_LABEL[it.mode]||it.mode);
+        });
+        const summary = document.getElementById('sched-summary');
+        if (summary) summary.textContent = '抓取调度 · ' + modes.join(' / ');
+      })
+      .catch(function(){});
+  }
+
+  toggle.addEventListener('click', function(){
+    panel.classList.toggle('open');
+  });
+
+
+  loadSchedule();
+})();
+</script>
+</body>
+</html>

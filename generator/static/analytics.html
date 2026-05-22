@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SEO 数据">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/app.css?v=2e68">
+<title>数据后台 - Oaklian SEO</title>
+<style>
+.biz-recossi { background: #5a8c6a; color: #fff; }
+
+.tabs {
+  display: flex; gap: 6px; overflow-x: auto;
+  padding: 12px 16px 0; max-width: 720px; margin: 0 auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex: 0 0 auto;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid #d6d9e0; background: #fff; color: #555;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; white-space: nowrap;
+  -webkit-appearance: none; appearance: none;
+}
+.tab.active { background: #1e2a4a; color: #fff; border-color: #1e2a4a; }
+
+.range {
+  display: flex; gap: 6px; justify-content: flex-end;
+  padding: 8px 16px 0; max-width: 720px; margin: 0 auto;
+}
+.range button {
+  padding: 4px 10px; border-radius: 6px;
+  border: 1px solid #e0e3ea; background: #fff; color: #666;
+  font-size: 12px; cursor: pointer;
+}
+.range button.active { background: #1e2a4a; color: #fff; border-color: #1e2a4a; }
+
+.kpi-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.kpi { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.kpi .label { font-size: 12px; color: #888; margin-bottom: 4px; letter-spacing: 0.02em; }
+.kpi .value { font-size: 26px; font-weight: 700; color: #1e2a4a; line-height: 1.1; }
+.kpi .sub { font-size: 12px; color: #999; margin-top: 4px; }
+
+.section-title {
+  font-size: 13px; color: #666; font-weight: 600;
+  margin: 18px 4px 8px; letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+.chart-card { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 12px; }
+.chart-wrap { position: relative; height: 220px; }
+
+.path-table { background: #fff; border-radius: 10px; padding: 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 12px; overflow: hidden; }
+.path-row { display: grid; grid-template-columns: 1fr 60px 60px; gap: 8px; padding: 11px 14px; border-bottom: 1px solid #f0f1f5; align-items: center; font-size: 14px; }
+.path-row:last-child { border-bottom: none; }
+.path-row.head { background: #fafbfc; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 14px; }
+.path-row .p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; }
+.path-row .n { text-align: right; font-variant-numeric: tabular-nums; color: #1e2a4a; font-weight: 600; }
+
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) { .summary-grid { grid-template-columns: 1fr; } }
+.biz-card {
+  background: #fff; border-radius: 10px; padding: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  cursor: pointer; transition: transform 0.1s;
+  display: block; text-decoration: none; color: inherit;
+}
+.biz-card:active { transform: scale(0.98); }
+.biz-card .biz { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.biz-card .lang { font-size: 11px; color: #999; margin-left: 6px; }
+.biz-card .pv { font-size: 22px; font-weight: 700; color: #1e2a4a; margin-top: 8px; }
+.biz-card .pv .unit { font-size: 12px; color: #888; font-weight: 400; margin-left: 4px; }
+.biz-card .vis { font-size: 12px; color: #666; margin-top: 2px; }
+.biz-card .pending { font-size: 12px; color: #b8965a; margin-top: 8px; font-style: italic; }
+
+.placeholder {
+  background: #fff; border: 1px dashed #d6d9e0; border-radius: 10px;
+  padding: 24px 16px; text-align: center; color: #888;
+  margin-bottom: 12px; font-size: 14px;
+}
+.placeholder .tag {
+  display: inline-block; font-size: 11px; color: #b8965a;
+  background: #fff8e1; padding: 2px 8px; border-radius: 4px;
+  margin-bottom: 8px; font-weight: 600; letter-spacing: 0.04em;
+}
+.placeholder .note { color: #999; font-size: 12px; margin-top: 4px; }
+
+.empty-state { text-align: center; color: #999; padding: 32px 16px; font-size: 14px; }
+.error { background: #fdecea; color: #c0392b; padding: 10px 12px; border-radius: 6px; margin: 10px 16px; font-size: 14px; }
+
+.fetched-at { font-size: 11px; color: #aaa; text-align: center; margin: 16px 0 24px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>数据后台</h1>
+  <a href="javascript:history.back()">← 待审</a>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button class="tab" data-key="summary">总览</button>
+  <button class="tab" data-key="oaklian">Oaklian</button>
+  <button class="tab" data-key="pricvo">Pricvo</button>
+  <button class="tab" data-key="jnono">Jnono</button>
+  <button class="tab" data-key="recossi">Recossi</button>
+</nav>
+
+<div class="range" id="range">
+  <button data-days="7">7天</button>
+  <button data-days="30" class="active">30天</button>
+  <button data-days="90">90天</button>
+</div>
+
+<main id="main">
+  <div class="empty-state">加载中…</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const BIZ_NAMES = { oaklian: 'Oaklian', pricvo: 'Pricvo', jnono: 'Jnono', recossi: 'Recossi' };
+const main = document.getElementById('main');
+let currentChart = null;
+let lastBusinessData = null;
+let state = { view: 'summary', days: 30 };
+
+function destroyChart() {
+  if (currentChart) { currentChart.destroy(); currentChart = null; }
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmt(n) {
+  if (n == null) return '0';
+  return Number(n).toLocaleString('en-US');
+}
+
+function setActiveTab(key) {
+  document.querySelectorAll('#tabs .tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.key === key);
+  });
+}
+
+function setActiveRange(days) {
+  document.querySelectorAll('#range button').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.days) === days);
+  });
+}
+
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return await r.json();
+}
+
+function renderError(msg) {
+  main.innerHTML = '<div class="error">' + escapeHtml(msg) + '</div>';
+}
+
+function renderSummary(data) {
+  destroyChart();
+  let totalPv = 0, totalVis = 0, totalPaths = 0;
+  data.businesses.forEach(b => { totalPv += b.pv_total; totalVis += b.visitors_total; totalPaths += b.path_count; });
+
+  const cards = data.businesses.map(b => {
+    const bizCls = 'biz biz-' + b.key;
+    if (b.seo_enabled) {
+      return '<a class="biz-card" href="#' + b.key + '">' +
+        '<span class="' + bizCls + '">' + b.display_name + '</span>' +
+        '<span class="lang">' + b.language.toUpperCase() + '</span>' +
+        '<div class="pv">' + fmt(b.pv_total) + '<span class="unit">PV</span></div>' +
+        '<div class="vis">' + fmt(b.visitors_total) + ' visitors · ' + b.path_count + ' 篇</div>' +
+        '</a>';
+    }
+    return '<a class="biz-card" href="#' + b.key + '">' +
+      '<span class="' + bizCls + '">' + b.display_name + '</span>' +
+      '<span class="lang">' + b.language.toUpperCase() + '</span>' +
+      '<div class="pending">闸门未开通</div>' +
+      '</a>';
+  }).join('');
+
+  main.innerHTML =
+    '<main style="padding:16px;max-width:720px;margin:0 auto;">' +
+    '<div class="kpi-row">' +
+      '<div class="kpi"><div class="label">总 PV</div><div class="value">' + fmt(totalPv) + '</div><div class="sub">' + data.days + ' 天 / 全业务</div></div>' +
+      '<div class="kpi"><div class="label">总 Visitors</div><div class="value">' + fmt(totalVis) + '</div><div class="sub">' + totalPaths + ' 个 URL</div></div>' +
+    '</div>' +
+    '<div class="section-title">业务面板</div>' +
+    '<div class="summary-grid">' + cards + '</div>' +
+    '</main>';
+}
+
+function renderBusiness(data) {
+  lastBusinessData = data;
+  destroyChart();
+  const bizCls = 'biz biz-' + data.key;
+  const seo = data.seo;
+
+  let html = '<main style="padding:16px;max-width:720px;margin:0 auto;">';
+  html += '<div style="margin-bottom:12px;"><span class="' + bizCls + '">' + data.display_name + '</span>' +
+          '<span class="lang" style="font-size:12px;color:#888;margin-left:6px;">' + data.language.toUpperCase() + '</span></div>';
+
+  if (!seo.enabled) {
+    html += '<div class="placeholder">' +
+      '<div class="tag">SEO 流量</div>' +
+      '<div>该业务的 publisher 闸门尚未开通</div>' +
+      '<div class="note">' + escapeHtml(seo.note || '') + '</div>' +
+      '</div>';
+  } else {
+    html += '<div class="kpi-row">' +
+      '<div class="kpi"><div class="label">PV (' + data.days + '天)</div><div class="value">' + fmt(seo.pv_total) + '</div><div class="sub">最新: ' + (seo.latest_date || '—') + '</div></div>' +
+      '<div class="kpi"><div class="label">Visitors</div><div class="value">' + fmt(seo.visitors_total) + '</div><div class="sub">' + seo.path_count + ' 个 URL</div></div>' +
+      '</div>';
+
+    html += '<div class="section-title">每日趋势</div>' +
+      '<div class="chart-card"><div class="chart-wrap"><canvas id="trend-chart"></canvas></div></div>';
+
+    html += '<div class="section-title">Top URL</div>';
+    if (!seo.top_paths.length) {
+      html += '<div class="empty-state">暂无数据</div>';
+    } else {
+      html += '<div class="path-table">' +
+        '<div class="path-row head"><div class="p">PATH</div><div class="n">PV</div><div class="n">VIS</div></div>' +
+        seo.top_paths.map(p =>
+          '<div class="path-row">' +
+            '<div class="p" title="' + escapeHtml(p.path) + '"><a href="https://oaklian.com' + escapeHtml(p.path) + '" target="_blank" rel="noopener" style="color:#3b4a6b;text-decoration:none">' + escapeHtml(p.path) + '</a></div>' +
+            '<div class="n">' + fmt(p.pv) + '</div>' +
+            '<div class="n">' + fmt(p.vis) + '</div>' +
+          '</div>'
+        ).join('') +
+        '</div>';
+    }
+    var bd = seo.breakdown || {};
+    var dimDefs = [
+      { key: 'country', title: '国家' },
+      { key: 'device',  title: '设备' },
+      { key: 'browser', title: '浏览器' },
+      { key: 'os',      title: '操作系统' },
+      { key: 'referer', title: '来源 Referer' },
+      { key: 'bot',     title: 'Bot 流量' }
+    ];
+    var INTERNAL_REFERERS = ['seo.oaklian.com', 'oaklian.com', 'accounts.google.com', 'oaklian.cloudflareaccess.com'];
+    function isExcludingInternal() {
+      try { return localStorage.getItem('excludeInternalReferer') !== '0'; } catch(e) { return true; }
+    }
+    function setExcludingInternal(on) {
+      try { localStorage.setItem('excludeInternalReferer', on ? '1' : '0'); } catch(e) {}
+    }
+    dimDefs.forEach(function(dd) {
+      var rows = bd[dd.key] || [];
+      if (dd.key === 'referer' && isExcludingInternal()) {
+        rows = rows.filter(function(r) { return INTERNAL_REFERERS.indexOf(r.value) === -1; });
+      }
+      if (dd.key === 'referer') {
+        var checked = isExcludingInternal() ? 'checked' : '';
+        html += '<div class="section-title" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+                  '<span>' + dd.title + '</span>' +
+                  '<label style="font-size:12px;font-weight:400;color:#666;display:inline-flex;align-items:center;gap:4px;cursor:pointer;">' +
+                    '<input type="checkbox" id="ref-toggle" ' + checked + ' style="margin:0;">' +
+                    '<span>排除自家域</span>' +
+                  '</label>' +
+                '</div>';
+      } else {
+        html += '<div class=\'section-title\'>' + dd.title + '</div>';
+      }
+      if (!rows.length) {
+        html += '<div class="empty-state">暂无数据</div>';
+      } else {
+        html += '<div class="path-table">' +
+          '<div class="path-row head"><div class="p">' + escapeHtml(dd.title) + '</div><div class="n">PV</div><div class="n">VIS</div></div>' +
+          rows.map(function(r) {
+            return '<div class="path-row">' +
+              '<div class="p" title="' + escapeHtml(r.value) + '">' + escapeHtml(r.value) + '</div>' +
+              '<div class="n">' + fmt(r.pageviews) + '</div>' +
+              '<div class="n">' + fmt(r.visitors) + '</div>' +
+            '</div>';
+          }).join('') +
+          '</div>';
+      }
+    });
+  }
+
+  if (data.affiliate) {
+    html += '<div class="section-title">联盟佣金</div>' +
+      '<div class="placeholder">' +
+      '<div class="tag">AFFILIATE</div>' +
+      '<div>联盟数据接口尚未接入</div>' +
+      '<div class="note">Sprint 2d+ 计划接入</div>' +
+      '</div>';
+  }
+  if (data.ecommerce) {
+    html += '<div class="section-title">电商 GMV</div>' +
+      '<div class="placeholder">' +
+      '<div class="tag">ECOMMERCE</div>' +
+      '<div>电商数据接口尚未接入</div>' +
+      '<div class="note">Sprint 2d+ 计划接入</div>' +
+      '</div>';
+  }
+
+  html += '</main>';
+  main.innerHTML = html;
+  var refToggle = document.getElementById('ref-toggle');
+  if (refToggle) {
+    refToggle.addEventListener('change', function() {
+      setExcludingInternal(this.checked);
+      if (lastBusinessData) { renderBusiness(lastBusinessData); }
+    });
+  }
+
+  if (seo.enabled && seo.series && seo.series.length) {
+    const ctx = document.getElementById('trend-chart').getContext('2d');
+    currentChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: seo.series.map(s => s.date.slice(5)),
+        datasets: [
+          { label: 'PV', data: seo.series.map(s => s.pv),
+            borderColor: '#1e2a4a', backgroundColor: 'rgba(30,42,74,0.08)',
+            tension: 0.3, fill: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
+          { label: 'Visitors', data: seo.series.map(s => s.vis),
+            borderColor: '#b8965a', backgroundColor: 'rgba(184,150,90,0.06)',
+            tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, font: { size: 12 }, color: '#666' } },
+          tooltip: { backgroundColor: '#1e2a4a', padding: 10, cornerRadius: 6, displayColors: true }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#999', font: { size: 11 }, maxRotation: 0 } },
+          y: { beginAtZero: true, grid: { color: '#f0f1f5' }, ticks: { color: '#999', font: { size: 11 }, precision: 0 } }
+        }
+      }
+    });
+  }
+}
+
+async function load() {
+  setActiveTab(state.view);
+  setActiveRange(state.days);
+  main.innerHTML = '<div class="empty-state">加载中…</div>';
+  try {
+    if (state.view === 'summary') {
+      const data = await fetchJSON('/api/analytics/summary?days=' + state.days);
+      renderSummary(data);
+    } else {
+      const data = await fetchJSON('/api/analytics/business/' + state.view + '?days=' + state.days);
+      renderBusiness(data);
+    }
+  } catch (e) {
+    renderError('加载失败: ' + e.message);
+  }
+}
+
+function applyHash() {
+  const h = (location.hash || '#summary').slice(1);
+  if (['summary', 'oaklian', 'pricvo', 'jnono', 'recossi'].includes(h)) {
+    state.view = h;
+  } else {
+    state.view = 'summary';
+  }
+  load();
+}
+
+document.querySelectorAll('#tabs .tab').forEach(t => {
+  t.addEventListener('click', () => { location.hash = '#' + t.dataset.key; });
+});
+document.querySelectorAll('#range button').forEach(b => {
+  b.addEventListener('click', () => {
+    state.days = Number(b.dataset.days);
+    load();
+  });
+});
+window.addEventListener('hashchange', applyHash);
+applyHash();
+</script>
+</body>
+</html>

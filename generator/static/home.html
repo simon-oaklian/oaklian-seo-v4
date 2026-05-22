@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SEO">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/app.css?v=2d61">
+<title>网站 - Oaklian SEO</title>
+<style>
+.hm-wrap{padding:16px}
+.hm-card{display:block;background:var(--card,#fff);border:1px solid var(--border,#eee);border-radius:14px;padding:20px;margin-bottom:14px;text-decoration:none;color:inherit;border-left:6px solid #ccc;transition:transform .12s}
+.hm-card:active{transform:scale(.99)}
+.hm-name{font-size:20px;font-weight:700;margin-bottom:6px}
+.hm-stat{font-size:13px;color:#888}
+.hm-stat b{color:#555;font-weight:600}
+.hm-sub{font-size:12px;color:#aaa;margin-top:14px;padding-left:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>我的网站</h1>
+</header>
+<main id="main">
+  <div class="hm-wrap" id="biz-list"><div class="empty">加载中…</div></div>
+</main>
+<script src="/static/app.js"></script>
+<script>
+async function loadBiz(){
+  var box=document.getElementById('biz-list');
+  try{
+    var resp=await fetch('/api/businesses');
+    var data=await resp.json();
+    var arr=data.businesses||[];
+    if(!arr.length){box.innerHTML='<div class="empty">暂无网站</div>';return}
+    var html='';
+    for(var i=0;i<arr.length;i++){
+      var b=arr[i];
+      html+='<a class="hm-card" style="border-left-color:'+b.color+'" href="/static/articles.html?business='+b.key+'">';
+      html+='<div class="hm-name" style="color:'+b.color+'">'+escape(b.name)+'</div>';
+      html+='<div class="hm-stat">共 <b>'+b.total+'</b> 篇 · 已发 <b>'+b.published+'</b> · 待审 <b>'+b.pending+'</b></div>';
+      html+='</a>';
+    }
+    box.innerHTML=html;
+  }catch(e){
+    box.innerHTML='<div class="empty">加载失败: '+e.message+'</div>';
+  }
+}
+loadBiz();
+</script>
+</body>
+</html>

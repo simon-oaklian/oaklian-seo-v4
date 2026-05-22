@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="/static/app.css">
+<title>新笔记 - SEO</title>
+<style>
+.img-row { display: flex; gap: 12px; margin-bottom: 8px; }
+.img-btn {
+  flex: 1; text-align: center; padding: 12px;
+  border: 1px solid #c7cdd9; border-radius: 8px;
+  background: #f5f6f8; color: #1e2a4a;
+  font-size: 15px; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.img-btn:active { background: #e8eaef; }
+.thumb-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 12px; }
+.thumb-img {
+  width: 72px; height: 72px; object-fit: cover;
+  border-radius: 6px; border: 1px solid #c7cdd9;
+}
+#audio-input { margin-top: 4px; }
+.rec-btn {
+  display: block; width: 100%;
+  padding: 16px; margin: 4px 0;
+  background: #1e2a4a; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 16px; font-weight: 600;
+  cursor: pointer; user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+.rec-btn.recording { background: #c0392b; }
+.rec-btn.cancel    { background: #888; }
+
+.city-hint { font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 6px; }
+.city-combobox { position: relative; margin-bottom: 12px; }
+.city-input {
+  width: 100%; padding: 10px 36px 10px 12px; box-sizing: border-box;
+  border: 1px solid #c7cdd9; border-radius: 8px; background: #fff;
+  color: #1e2a4a; font-size: 15px;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='%231e2a4a' d='M4 6l4 4 4-4z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;
+}
+.city-input:focus { border-color: #1e2a4a; outline: none; }
+.city-list {
+  display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: #fff; border: 1px solid #c7cdd9; border-radius: 8px;
+  max-height: 280px; overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08); z-index: 100;
+}
+.city-list.open { display: block; }
+.city-list .group-label {
+  padding: 8px 12px; font-size: 12px; color: #888;
+  background: #f5f6f8; font-weight: 600; letter-spacing: 0.05em;
+}
+.city-list .city-item {
+  padding: 10px 12px 10px 20px; font-size: 15px; color: #1e2a4a; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.city-list .city-item:active { background: #e8eaef; }
+.city-list .city-item.other-item {
+  border-top: 1px solid #e0e3eb; color: #1e2a4a; font-style: italic;
+}
+</style>
+<style id="kw-sel-css">
+/* SPRINT_2L1C_KW_SELECTOR */
+.kw-sel-hint {
+  font-size: 12px;
+  color: #666;
+  margin: 4px 0 8px;
+}
+.kw-sel-combobox {
+  position: relative;
+  margin-bottom: 8px;
+}
+.kw-sel-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d0d4dc;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.kw-sel-input:focus {
+  outline: none;
+  border-color: #2c5db7;
+}
+.kw-sel-list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #d0d4dc;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.kw-sel-list.open { display: block; }
+.kw-sel-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kw-sel-item:last-child { border-bottom: none; }
+.kw-sel-item:hover, .kw-sel-item.active { background: #eef4ff; }
+.kw-sel-item.selected { opacity: 0.4; cursor: not-allowed; }
+.kw-sel-item-kw {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kw-sel-item-meta {
+  font-size: 11px;
+  color: #888;
+  flex-shrink: 0;
+}
+.kw-sel-item-meta .badge-today {
+  background: #fff7e0;
+  color: #a07020;
+  padding: 1px 6px;
+  border-radius: 8px;
+  margin-right: 4px;
+}
+.kw-sel-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+}
+.kw-sel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  min-height: 0;
+}
+.kw-sel-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: #f0f2f5;
+  color: #333;
+  border-radius: 14px;
+  font-size: 13px;
+  border: 1px solid #d0d4dc;
+}
+.kw-sel-chip.primary {
+  background: #2c5db7;
+  color: #fff;
+  border-color: #2c5db7;
+  font-weight: 600;
+}
+.kw-sel-chip.primary::before {
+  content: '主词';
+  font-size: 10px;
+  padding: 1px 5px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 8px;
+  margin-right: 2px;
+}
+.kw-sel-chip-x {
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.7;
+  font-weight: bold;
+}
+.kw-sel-chip-x:hover { opacity: 1; }
+</style>
+</head>
+<body>
+<header>
+  <h1>新笔记</h1>
+  <a href="javascript:history.back()">← 返回</a>
+</header>
+<main>
+  <div id="error-box"></div>
+
+  <label>选业务</label>
+  <div class="btn-group" id="biz-group">
+    <button class="btn" data-biz="oaklian">Oaklian</button>
+    <button class="btn" data-biz="jnono">jnono</button>
+    <button class="btn" data-biz="pricvo">Pricvo</button>
+  </div>
+
+  <label>选语言</label>
+  <div class="btn-group" id="lang-group">
+    <button class="btn" data-lang="zh">中文</button>
+    <button class="btn" data-lang="en">English</button>
+  </div>
+
+  <label>项目所在城市(可选)</label>
+  <div class="city-hint">💡 填具体城市能大幅提升本地 SEO。无关项目可留空。</div>
+  <div class="city-combobox" id="city-combobox">
+    <input type="text" id="city-input" class="city-input" placeholder="选择或直接输入城市" autocomplete="off">
+    <div class="city-list" id="city-list">
+      <div class="group-label">南湾</div>
+      <div class="city-item" data-city="San Jose">San Jose</div>
+      <div class="city-item" data-city="Sunnyvale">Sunnyvale</div>
+      <div class="city-item" data-city="Cupertino">Cupertino</div>
+      <div class="city-item" data-city="Santa Clara">Santa Clara</div>
+      <div class="city-item" data-city="Mountain View">Mountain View</div>
+      <div class="city-item" data-city="Los Altos">Los Altos</div>
+      <div class="city-item" data-city="Saratoga">Saratoga</div>
+      <div class="group-label">半岛</div>
+      <div class="city-item" data-city="Palo Alto">Palo Alto</div>
+      <div class="city-item" data-city="Menlo Park">Menlo Park</div>
+      <div class="city-item" data-city="Redwood City">Redwood City</div>
+      <div class="city-item" data-city="San Carlos">San Carlos</div>
+      <div class="city-item" data-city="San Mateo">San Mateo</div>
+      <div class="city-item" data-city="Foster City">Foster City</div>
+      <div class="city-item" data-city="Belmont">Belmont</div>
+      <div class="city-item" data-city="Burlingame">Burlingame</div>
+      <div class="city-item" data-city="Millbrae">Millbrae</div>
+      <div class="city-item" data-city="San Bruno">San Bruno</div>
+      <div class="city-item" data-city="South San Francisco">South San Francisco</div>
+      <div class="group-label">东湾</div>
+      <div class="city-item" data-city="Fremont">Fremont</div>
+      <div class="city-item" data-city="Hayward">Hayward</div>
+      <div class="city-item other-item" data-city="__OTHER__">✏️ 其它(自己输入)</div>
+    </div>
+  </div>
+
+<!-- SPRINT_2L1C_KW_SELECTOR BEGIN -->
+  <label>选关键词(可选)</label>
+  <div class="kw-sel-hint">💡 第一个选中的是<b>主词</b>(出标题),后续是辅助词(自然出现在正文)</div>
+  <div class="kw-sel-combobox" id="kw-sel-combobox">
+    <input type="text" id="kw-sel-input" class="kw-sel-input" placeholder="搜索或选择关键词" autocomplete="off">
+    <div class="kw-sel-list" id="kw-sel-list">
+      <div class="kw-sel-empty">加载中…</div>
+    </div>
+  </div>
+  <div class="kw-sel-chips" id="kw-sel-chips"></div>
+<!-- SPRINT_2L1C_KW_SELECTOR END -->
+
+  <label>笔记内容</label>
+  <textarea id="note" placeholder="说话或打字记录:发生了什么、什么时间、谁参与、关键数字大约多少…"></textarea>
+  <div class="counter"><span id="counter">0</span> 字</div>
+
+  <label>图片(可选,最多 4 张)</label>
+  <div class="img-row">
+    <label class="img-btn" for="photos-camera">📷 拍照</label>
+    <label class="img-btn" for="photos-album">🖼 相册</label>
+  </div>
+  <input type="file" id="photos-camera" accept="image/*" capture="environment" multiple style="display:none">
+  <input type="file" id="photos-album" accept="image/*" multiple style="display:none">
+  <div id="photo-preview" class="thumb-row"></div>
+
+  <label>录音(可选)</label>
+  <button type="button" id="rec-btn" class="rec-btn">🎙 按住录音</button>
+  <div id="rec-status" class="counter"></div>
+  <input type="hidden" id="audio-input">
+  <audio id="rec-playback" controls style="display:none; width:100%; margin-top:8px;"></audio>
+
+  <label style="display:flex;align-items:center;gap:8px;margin:14px 0 10px;font-size:14px;color:#444;cursor:pointer;user-select:none;">
+    <input type="checkbox" id="syncXhsChk" style="width:18px;height:18px;cursor:pointer;">
+    <span>同时生成小红书草稿</span>
+    <span style="color:#999;font-size:12px;">(生成文章成功后自动改写,可在小红书页面审核)</span>
+  </label>
+  <button class="btn-primary" id="generate">生成文章</button>
+</main>
+
+<script src="/static/app.js"></script>
+<script>
+let selectedBiz = null;
+let selectedLang = null;
+
+document.querySelectorAll('#biz-group .btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#biz-group .btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    selectedBiz = b.dataset.biz;
+    if (selectedBiz === 'oaklian' || selectedBiz === 'pricvo') {
+      document.querySelectorAll('#lang-group .btn').forEach(x => x.classList.remove('active'));
+      const enBtn = document.querySelector('#lang-group .btn[data-lang="en"]');
+      enBtn.classList.add('active');
+      selectedLang = 'en';
+    } else if (selectedBiz === 'jnono') {
+      document.querySelectorAll('#lang-group .btn').forEach(x => x.classList.remove('active'));
+      const zhBtn = document.querySelector('#lang-group .btn[data-lang="zh"]');
+      zhBtn.classList.add('active');
+      selectedLang = 'zh';
+    }
+  });
+});
+
+document.querySelectorAll('#lang-group .btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#lang-group .btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    selectedLang = b.dataset.lang;
+  });
+});
+
+// auto-select business from URL ?business=X (new multi-site entry). No param = unchanged.
+(function(){
+  var bp = new URLSearchParams(window.location.search).get('business');
+  if (bp) {
+    var btn = document.querySelector('#biz-group .btn[data-biz="' + bp + '"]');
+    if (btn) btn.click();
+  }
+})();
+const cityInput = document.getElementById('city-input');
+const cityList = document.getElementById('city-list');
+const cityCombobox = document.getElementById('city-combobox');
+
+function openList() { cityList.classList.add('open'); }
+function closeList() { cityList.classList.remove('open'); }
+
+// Open dropdown when input is focused (tap or click).
+cityInput.addEventListener('focus', openList);
+cityInput.addEventListener('click', openList);
+
+// Click on a city item: fill input + close. Special "__OTHER__" clears + focuses.
+cityList.querySelectorAll('.city-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const val = item.dataset.city;
+    if (val === '__OTHER__') {
+      cityInput.value = '';
+      closeList();
+      // Slight delay so the click doesn't immediately re-focus and re-open.
+      setTimeout(() => cityInput.focus(), 50);
+    } else {
+      cityInput.value = val;
+      closeList();
+      cityInput.blur();
+    }
+  });
+});
+
+// Close dropdown when tapping outside the combobox.
+document.addEventListener('click', (e) => {
+  if (!cityCombobox.contains(e.target)) closeList();
+});
+
+// Typing should not close the dropdown — user may be filtering visually.
+// (No filtering logic yet; just keep open.)
+
+const noteEl = document.getElementById('note');
+const counterEl = document.getElementById('counter');
+let counterTimer = null;
+noteEl.addEventListener('input', () => {
+  if (counterTimer) clearTimeout(counterTimer);
+  counterTimer = setTimeout(() => {
+    counterEl.textContent = noteEl.value.length;
+  }, 300);
+});
+
+document.getElementById('generate').addEventListener('click', async () => {
+  const errBox = document.getElementById('error-box');
+  errBox.innerHTML = '';
+  const note = noteEl.value.trim();
+  if (!selectedBiz) return showError(errBox, '请选业务');
+  if (!selectedLang) return showError(errBox, '请选语言');
+  if (note.length < 20) return showError(errBox, '笔记太短(至少 20 字)');
+
+  const btn = document.getElementById('generate');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>生成中(约 15-30 秒)…';
+  try {
+    const city = (cityInput.value || '').trim();
+    const fd = new FormData();
+    fd.append('business', selectedBiz);
+    fd.append('language', selectedLang);
+    fd.append('city', city);
+      /* SPRINT_2L1C_KW_SELECTOR */
+      if (window._sprint2L_keywords) {
+        fd.append('primary_keyword', window._sprint2L_keywords.getPrimary());
+        fd.append('supporting_keywords', window._sprint2L_keywords.getSupporting().join(','));
+      }
+    fd.append('raw_note', note);
+    fd.append('sync_xhs', (document.getElementById('syncXhsChk') && document.getElementById('syncXhsChk').checked) ? '1' : '0');
+    window._sprint3_photos.forEach(function(f) { fd.append('images', f); });
+    let endpoint = '/article/draft';
+    const audioFile = window._sprint3_audioBlob || null;
+    if (audioFile && note.length === 0) {
+      const fda = new FormData();
+      fda.append('business', selectedBiz);
+      fda.append('language', selectedLang);
+      fda.append('city', city);
+      /* SPRINT_2L1C_KW_SELECTOR */
+      if (window._sprint2L_keywords) {
+        fda.append('primary_keyword', window._sprint2L_keywords.getPrimary());
+        fda.append('supporting_keywords', window._sprint2L_keywords.getSupporting().join(','));
+      }
+      fda.append('sync_xhs', (document.getElementById('syncXhsChk') && document.getElementById('syncXhsChk').checked) ? '1' : '0');
+      fda.append('audio', audioFile, 'recording.webm');
+      endpoint = '/article/draft-from-audio';
+      const rr = await fetch(endpoint, { method: 'POST', body: fda });
+      if (!rr.ok) throw new Error((await rr.json()).detail || rr.statusText);
+      var r = await rr.json();
+    } else {
+      const rr = await fetch('/article/draft', { method: 'POST', body: fd });
+      if (!rr.ok) throw new Error((await rr.json()).detail || rr.statusText);
+      var r = await rr.json();
+    }
+    window.location.href = '/static/article.html?id=' + r.id;
+  } catch (e) {
+    showError(errBox, '生成失败: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '生成文章';
+  }
+});
+
+
+window._sprint3_photos = [];
+(function() {
+  var camera = document.getElementById('photos-camera');
+  var album = document.getElementById('photos-album');
+  var preview = document.getElementById('photo-preview');
+  function add(files) {
+    var arr = Array.from(files);
+    window._sprint3_photos = window._sprint3_photos.concat(arr).slice(0, 4);
+    preview.innerHTML = '';
+    window._sprint3_photos.forEach(function(f) {
+      var img = document.createElement('img');
+      img.src = URL.createObjectURL(f);
+      img.className = 'thumb-img';
+      preview.appendChild(img);
+    });
+  }
+  if (camera) camera.addEventListener('change', function() { add(camera.files); });
+  if (album) album.addEventListener('change', function() { add(album.files); });
+  var au = document.getElementById('audio-input');
+  var an = document.getElementById('audio-name');
+  if (au) au.addEventListener('change', function() {
+    var f = au.files[0];
+    an.textContent = f ? '已选: ' + f.name + ' (' + Math.round(f.size/1024) + ' KB)' : '';
+  });
+})();
+
+
+// --- press-to-record (MediaRecorder) ---
+(function() {
+  var btn = document.getElementById('rec-btn');
+  var status = document.getElementById('rec-status');
+  var playback = document.getElementById('rec-playback');
+  if (!btn) return;
+
+  var mediaRecorder = null;
+  var chunks = [];
+  var stream = null;
+  var startedAt = 0;
+  var timerId = null;
+  var cancelled = false;
+
+  // window._sprint3_audioBlob holds the recorded blob; submit handler reads it
+  window._sprint3_audioBlob = null;
+
+  function fmtTime(ms) {
+    var s = Math.floor(ms / 1000);
+    var m = Math.floor(s / 60);
+    s = s % 60;
+    return m + ':' + (s < 10 ? '0' + s : s);
+  }
+
+  async function start(ev) {
+    ev.preventDefault();
+    cancelled = false;
+    chunks = [];
+    window._sprint3_audioBlob = null;
+    playback.style.display = 'none';
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      status.textContent = '麦克风权限被拒: ' + e.message;
+      return;
+    }
+    try {
+      mediaRecorder = new MediaRecorder(stream);
+    } catch (e) {
+      status.textContent = '浏览器不支持录音: ' + e.message;
+      stream.getTracks().forEach(function(t) { t.stop(); });
+      return;
+    }
+    mediaRecorder.ondataavailable = function(e) {
+      if (e.data && e.data.size > 0) chunks.push(e.data);
+    };
+    mediaRecorder.onstop = function() {
+      stream.getTracks().forEach(function(t) { t.stop(); });
+      if (cancelled || chunks.length === 0) {
+        status.textContent = '已取消';
+        return;
+      }
+      var blob = new Blob(chunks, { type: chunks[0].type || 'audio/webm' });
+      window._sprint3_audioBlob = blob;
+      playback.src = URL.createObjectURL(blob);
+      playback.style.display = 'block';
+      var dur = Math.round((Date.now() - startedAt) / 1000);
+      status.textContent = '已录 ' + dur + ' 秒,可播放确认。再次按住可重录。';
+    };
+    mediaRecorder.start();
+    startedAt = Date.now();
+    btn.classList.add('recording');
+    btn.textContent = '🔴 录音中 0:00';
+    timerId = setInterval(function() {
+      if (cancelled) return;
+      btn.textContent = '🔴 录音中 ' + fmtTime(Date.now() - startedAt);
+    }, 250);
+  }
+
+  function stop(ev) {
+    ev.preventDefault();
+    if (timerId) { clearInterval(timerId); timerId = null; }
+    btn.classList.remove('recording', 'cancel');
+    btn.textContent = '🎙 按住录音';
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+  }
+
+  function maybeCancel(ev) {
+    if (!mediaRecorder || mediaRecorder.state !== 'recording') return;
+    var t = ev.touches[0];
+    var rect = btn.getBoundingClientRect();
+    var outside = (t.clientX < rect.left || t.clientX > rect.right ||
+                   t.clientY < rect.top  || t.clientY > rect.bottom);
+    if (outside) {
+      btn.classList.add('cancel');
+      btn.textContent = '✋ 松手取消';
+      cancelled = true;
+    } else {
+      btn.classList.remove('cancel');
+      cancelled = false;
+    }
+  }
+
+  // Touch events for iOS
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('touchend', stop, { passive: false });
+  btn.addEventListener('touchcancel', stop, { passive: false });
+  btn.addEventListener('touchmove', maybeCancel, { passive: false });
+
+  // Mouse events for desktop testing
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('mouseup', stop);
+  btn.addEventListener('mouseleave', function(ev) {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      cancelled = true;
+      stop(ev);
+    }
+  });
+})();
+</script>
+<script>
+/* === SPRINT_2L1C_KW_SELECTOR BEGIN === */
+(function() {
+  var input = document.getElementById('kw-sel-input');
+  var list = document.getElementById('kw-sel-list');
+  var chipsBox = document.getElementById('kw-sel-chips');
+  if (!input || !list || !chipsBox) return;
+
+  // State: array of selected keyword strings. First entry is primary.
+  var selected = [];
+  // All available keywords from the API
+  var all = [];
+  // Currently highlighted item in dropdown (keyboard nav, not implemented now)
+  var activeIdx = -1;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function(c) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function renderChips() {
+    if (!selected.length) {
+      chipsBox.innerHTML = '';
+      return;
+    }
+    chipsBox.innerHTML = selected.map(function(kw, i) {
+      var cls = (i === 0) ? 'kw-sel-chip primary' : 'kw-sel-chip';
+      return '<span class="' + cls + '" data-kw="' + escapeHtml(kw) + '">' +
+             escapeHtml(kw) +
+             '<span class="kw-sel-chip-x" data-kw="' + escapeHtml(kw) + '">×</span>' +
+             '</span>';
+    }).join('');
+  }
+
+  function isSelected(kw) {
+    return selected.indexOf(kw) !== -1;
+  }
+
+  function addSelection(kw) {
+    if (!kw) return;
+    if (isSelected(kw)) return;
+    selected.push(kw);
+    renderChips();
+    closeList();
+    input.value = '';
+  }
+
+  function removeSelection(kw) {
+    var i = selected.indexOf(kw);
+    if (i !== -1) {
+      selected.splice(i, 1);
+      renderChips();
+    }
+  }
+
+  function getFiltered() {
+    var q = (input.value || '').trim().toLowerCase();
+    if (!q) return all;
+    return all.filter(function(it) {
+      return it.keyword.toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function renderList() {
+    var items = getFiltered();
+    if (!items.length) {
+      list.innerHTML = '<div class="kw-sel-empty">没有匹配项</div>';
+      return;
+    }
+    list.innerHTML = items.map(function(it) {
+      var meta = '';
+      if (it.is_today) meta += '<span class="badge-today">今</span>';
+      meta += escapeHtml(it.business || '') + ' · ×' + it.appearances;
+      var cls = isSelected(it.keyword) ? 'kw-sel-item selected' : 'kw-sel-item';
+      return '<div class="' + cls + '" data-kw="' + escapeHtml(it.keyword) + '">' +
+             '<span class="kw-sel-item-kw">' + escapeHtml(it.keyword) + '</span>' +
+             '<span class="kw-sel-item-meta">' + meta + '</span>' +
+             '</div>';
+    }).join('');
+  }
+
+  function openList() {
+    renderList();
+    list.classList.add('open');
+  }
+
+  function closeList() {
+    list.classList.remove('open');
+  }
+
+  // --- Load data ---
+  /* SPRINT_2L1D_KW_BIZ_FILTER: keywords now filtered by business */
+  var _currentBiz = '';     // tracks the loaded business
+  var _pendingAutoKw = '';  // pending keyword to auto-select after load
+
+  function clearAllSelections() {
+    selected.length = 0;
+    renderChips();
+  }
+
+  function loadKeywordsForBusiness(biz) {
+    // No business? Reset state, show placeholder.
+    if (!biz) {
+      _currentBiz = '';
+      all = [];
+      list.innerHTML = '<div class="kw-sel-empty">请先选业务</div>';
+      input.placeholder = '请先选业务';
+      input.disabled = true;
+      return;
+    }
+
+    // Switching to a different biz: clear previously-selected chips since
+    // they belonged to the old business and would be off-topic now.
+    if (_currentBiz && _currentBiz !== biz) {
+      clearAllSelections();
+    }
+    _currentBiz = biz;
+    input.disabled = false;
+    input.placeholder = '搜索或选择关键词';
+    list.innerHTML = '<div class="kw-sel-empty">加载中…</div>';
+
+    fetch('/api/keywords/for-writing?business=' + encodeURIComponent(biz),
+          { credentials: 'same-origin' })
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(d) {
+        all = d.items || [];
+        // If there's a pending auto-keyword (from keywords.html ✍ jump),
+        // try to auto-select it now that the list is loaded.
+        if (_pendingAutoKw) {
+          var kw = _pendingAutoKw;
+          _pendingAutoKw = '';
+          // verify it actually exists in this business's list
+          var hit = all.some(function(it) { return it.keyword === kw; });
+          if (hit) {
+            addSelection(kw);
+          }
+        }
+      })
+      .catch(function(e) {
+        all = [];
+        list.innerHTML = '<div class="kw-sel-empty">加载失败: ' +
+                         escapeHtml(e.message) + '</div>';
+      });
+  }
+
+  // Expose so the business-button click handler can call us
+  window._sprint2L_loadKeywords = loadKeywordsForBusiness;
+  window._sprint2L_clearSelections = clearAllSelections;
+
+  // Initial state: no business chosen yet
+  loadKeywordsForBusiness('');
+
+  // Read any pending auto-prime from keywords.html ✍
+  try {
+    var autoKw = sessionStorage.getItem('seo_v4_primary_keyword');
+    var autoBiz = sessionStorage.getItem('seo_v4_primary_business_hint');
+    if (autoKw) {
+      sessionStorage.removeItem('seo_v4_primary_keyword');
+      sessionStorage.removeItem('seo_v4_primary_business_hint');
+      _pendingAutoKw = autoKw;
+      // If we have a business hint, find and click that button to trigger
+      // both UI selection and our load.
+      if (autoBiz) {
+        // The biz-group buttons use data-biz attribute (verify or guess)
+        var bizBtn = document.querySelector('[data-biz="' + autoBiz + '"]');
+        // Fallback: case-insensitive scan over all buttons with data-biz
+        if (!bizBtn) {
+          var allBizBtns = document.querySelectorAll('[data-biz]');
+          for (var i = 0; i < allBizBtns.length; i++) {
+            if ((allBizBtns[i].getAttribute('data-biz') || '').toLowerCase() ===
+                autoBiz.toLowerCase()) {
+              bizBtn = allBizBtns[i];
+              break;
+            }
+          }
+        }
+        if (bizBtn) {
+          // Simulate a real click so the existing biz-selection JS runs
+          // (which sets selectedBusiness var, highlights the button, etc.)
+          bizBtn.click();
+          // Defensive: also trigger our load in case the existing click
+          // handler doesn't call us back (it doesn't — see below patch).
+          loadKeywordsForBusiness(autoBiz);
+        } else {
+          // No matching biz button — just load and let user re-pick biz
+          loadKeywordsForBusiness(autoBiz);
+        }
+      }
+    }
+  } catch (e) { /* sessionStorage failure is non-fatal */ }
+
+  // --- Event wiring ---
+  input.addEventListener('focus', openList);
+  input.addEventListener('input', function() {
+    openList();
+  });
+
+  list.addEventListener('click', function(ev) {
+    var it = ev.target.closest('.kw-sel-item');
+    if (!it) return;
+    if (it.classList.contains('selected')) return;
+    var kw = it.getAttribute('data-kw');
+    addSelection(kw);
+  });
+
+  chipsBox.addEventListener('click', function(ev) {
+    var x = ev.target.closest('.kw-sel-chip-x');
+    if (!x) return;
+    var kw = x.getAttribute('data-kw');
+    removeSelection(kw);
+  });
+
+  // Click outside -> close list
+  document.addEventListener('click', function(ev) {
+    if (!ev.target.closest('#kw-sel-combobox')) {
+      closeList();
+    }
+  });
+
+  // Expose for the submit handler to read
+  window._sprint2L_keywords = {
+    getPrimary: function() { return selected[0] || ''; },
+    getSupporting: function() { return selected.slice(1); }
+  };
+
+  loadKeywords();
+})();
+/* === SPRINT_2L1C_KW_SELECTOR END === */
+</script>
+
+<script>
+/* === SPRINT_2L1D_KW_BIZ_FILTER BIZ HOOK BEGIN === */
+/* Hook business-button clicks to (re)load keywords for that business. */
+document.addEventListener('click', function(ev) {
+  var b = ev.target.closest('[data-biz]');
+  if (!b) return;
+  /* Only buttons inside #biz-group (the business selector at top), not chips */
+  if (!b.closest('#biz-group, .btn-group')) return;
+  /* Skip the chip remove buttons (they have data-kw not data-biz) */
+  var biz = b.getAttribute('data-biz');
+  if (!biz) return;
+  if (typeof window._sprint2L_loadKeywords === 'function') {
+    /* Defer slightly so the original click handler runs first (button
+       highlight, selectedBusiness var, etc) */
+    setTimeout(function() { window._sprint2L_loadKeywords(biz); }, 0);
+  }
+});
+/* === SPRINT_2L1D_KW_BIZ_FILTER BIZ HOOK END === */
+</script>
+
+</body>
+</html>

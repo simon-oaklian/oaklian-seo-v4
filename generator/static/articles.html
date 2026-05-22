@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SEO">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="stylesheet" href="/static/app.css?v=2d61">
+<title>文章 - Oaklian SEO</title>
+<style>
+.at-tabs{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.at-tabs::-webkit-scrollbar{display:none}
+.at-tab{flex-shrink:0;padding:7px 16px;border:1px solid var(--border,#ddd);border-radius:18px;background:var(--card,#fff);font-size:13px;cursor:pointer;color:var(--fg,#333)}
+.at-tab.on{background:#1e2a4a;color:#fff;border-color:#1e2a4a}
+.at-card{display:block;background:var(--card,#fff);border:1px solid var(--border,#eee);border-radius:10px;padding:14px;margin:10px 16px;text-decoration:none;color:inherit}
+.at-card .title{font-weight:600;font-size:15px;margin:6px 0;line-height:1.4;color:#1e2a4a}
+.at-card .meta{font-size:12px;color:#999}
+.at-st{font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px}
+.at-st.pending{background:#fff3cd;color:#856404}
+.at-st.published{background:#d4edda;color:#155724}
+.at-st.failed{background:#f8d7da;color:#721c24}
+.at-st.discarded{background:#e2e3e5;color:#666}
+.at-gen{display:inline-block;margin-top:10px;padding:8px 16px;border:none;border-radius:6px;background:#e91e63;color:#fff;font-size:13px;cursor:pointer}
+.at-gen:disabled{opacity:.5}
+.at-back{color:#fff;text-decoration:none;font-size:15px}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="hdr">文章</h1>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <a id="ic-ana" title="数据" aria-label="数据" href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:30px;padding:0;color:inherit;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="20" x2="6" y2="11"/><line x1="12" y1="20" x2="12" y2="5"/><line x1="18" y1="20" x2="18" y2="14"/></svg>
+    </a>
+    <a id="ic-kw" title="关键词" aria-label="关键词" href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:30px;padding:0;color:inherit;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    </a>
+    <a id="ic-new" title="新建" aria-label="新建" href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:30px;padding:0;font-size:20px;line-height:1;text-decoration:none;color:inherit;">+</a>
+    <a id="ic-xhs" title="小红书" aria-label="小红书" href="#" style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:30px;padding:0;text-decoration:none;color:inherit;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </a>
+    <a class="at-back" href="/static/home.html" style="margin-left:4px;">← 网站</a>
+  </div>
+</header>
+<main id="main">
+  <div class="at-tabs" id="tabs">
+    <button class="at-tab on" data-s="pending">待审</button>
+    <button class="at-tab" data-s="published">已发布</button>
+    <button class="at-tab" data-s="all">全部</button>
+  </div>
+  <div id="list"><div class="empty">加载中…</div></div>
+</main>
+<script src="/static/app.js"></script>
+<script>
+var params=new URLSearchParams(window.location.search);
+var BIZ=params.get('business')||'';
+var curStatus='pending';
+
+var BIZ_NAME={oaklian:'Oaklian',jnono:'jnono',pricvo:'Pricvo'};
+document.getElementById('hdr').textContent=(BIZ_NAME[BIZ]||BIZ||'文章');
+var _bq=BIZ?('?business='+BIZ):'';
+document.getElementById('ic-ana').href='/static/analytics.html'+_bq;
+document.getElementById('ic-kw').href='/static/keywords.html'+_bq;
+document.getElementById('ic-new').href='/static/new.html'+_bq;
+document.getElementById('ic-xhs').href='/static/xhs.html'+_bq;
+
+function stLabel(s){return {pending:'待审',published:'已发布',failed:'失败',discarded:'已丢弃'}[s]||s}
+
+function loadList(){
+  var box=document.getElementById('list');
+  box.innerHTML='<div class="empty">加载中…</div>';
+  fetch('/article/list?status='+curStatus+'&business='+BIZ+'&limit=50')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      var arr=d.articles||[];
+      if(!arr.length){box.innerHTML='<div class="empty">暂无文章</div>';return}
+      var html='';
+      for(var i=0;i<arr.length;i++){
+        var a=arr[i];
+        var date=a.created_at?a.created_at.slice(0,10):'';
+        html+='<div class="at-card">';
+        html+='<a href="/static/article.html?id='+a.id+'" style="text-decoration:none;color:inherit">';
+        html+='<div class="meta">#'+a.id+' · '+date+'<span class="at-st '+a.status+'">'+stLabel(a.status)+'</span></div>';
+        html+='<div class="title">'+escape(a.title||'(无标题)')+'</div>';
+        html+='</a>';
+        if(a.status==='published'){
+          html+='<button class="at-gen" onclick="genXhs('+a.id+',this)">转小红书</button>';
+        }
+        html+='</div>';
+      }
+      box.innerHTML=html;
+    })
+    .catch(function(e){box.innerHTML='<div class="empty">加载失败: '+e.message+'</div>'});
+}
+
+function genXhs(articleId,btn){
+  if(!confirm('用文章 #'+articleId+' 生成小红书草稿？\n\n会调用 AI 改写，约 10-30 秒。'))return;
+  btn.disabled=true;
+  btn.textContent='生成中…';
+  fetch('/api/articles/'+articleId+'/gen-xhs',{method:'POST'})
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(d.status==='created'){
+        if(confirm('✅ 小红书草稿已生成 (draft #'+d.draft_id+')\n\n去小红书页查看？')){
+          window.location.href='/static/xhs.html';
+        }else{
+          btn.textContent='已生成 #'+d.draft_id;
+        }
+      }else if(d.status==='exists'){
+        if(confirm('这篇已经生成过小红书草稿了 (draft '+(d.draft_ids||[]).join(',')+')\n\n去小红书页查看？')){
+          window.location.href='/static/xhs.html';
+        }else{
+          btn.textContent='已存在';
+          btn.disabled=false;
+        }
+      }else{
+        alert('生成结果未知:\n'+(d.message||'').slice(-300));
+        btn.textContent='转小红书';
+        btn.disabled=false;
+      }
+    })
+    .catch(function(e){
+      alert('生成失败: '+e.message);
+      btn.textContent='转小红书';
+      btn.disabled=false;
+    });
+}
+
+var tabs=document.getElementById('tabs').getElementsByClassName('at-tab');
+for(var i=0;i<tabs.length;i++){
+  tabs[i].addEventListener('click',function(e){
+    for(var j=0;j<tabs.length;j++)tabs[j].classList.remove('on');
+    e.target.classList.add('on');
+    curStatus=e.target.getAttribute('data-s');
+    loadList();
+  });
+}
+
+loadList();
+</script>
+</body>
+</html>
