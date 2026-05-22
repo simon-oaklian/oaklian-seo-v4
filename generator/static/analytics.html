@@ -10,6 +10,10 @@
 <link rel="stylesheet" href="/static/app.css?v=2e68">
 <title>数据后台 - Oaklian SEO</title>
 <style>
+.biz { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.biz-oaklian { background: #1e2a4a; color: #fff; }
+.biz-pricvo { background: #c0392b; color: #fff; }
+.biz-jnono { background: #b8965a; color: #fff; }
 .biz-recossi { background: #5a8c6a; color: #fff; }
 
 .tabs {
@@ -54,10 +58,10 @@
 .chart-wrap { position: relative; height: 220px; }
 
 .path-table { background: #fff; border-radius: 10px; padding: 4px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 12px; overflow: hidden; }
-.path-row { display: grid; grid-template-columns: 1fr 60px 60px; gap: 8px; padding: 11px 14px; border-bottom: 1px solid #f0f1f5; align-items: center; font-size: 14px; }
+.path-row { display: grid; grid-template-columns: minmax(0, 1fr) 56px 56px; gap: 8px; padding: 11px 14px; border-bottom: 1px solid #f0f1f5; align-items: center; font-size: 14px; }
 .path-row:last-child { border-bottom: none; }
 .path-row.head { background: #fafbfc; font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 14px; }
-.path-row .p { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; }
+.path-row .p { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #333; }
 .path-row .n { text-align: right; font-variant-numeric: tabular-nums; color: #1e2a4a; font-weight: 600; }
 
 .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -69,7 +73,6 @@
   display: block; text-decoration: none; color: inherit;
 }
 .biz-card:active { transform: scale(0.98); }
-.biz-card .biz { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
 .biz-card .lang { font-size: 11px; color: #999; margin-left: 6px; }
 .biz-card .pv { font-size: 22px; font-weight: 700; color: #1e2a4a; margin-top: 8px; }
 .biz-card .pv .unit { font-size: 12px; color: #888; font-weight: 400; margin-left: 4px; }
@@ -139,6 +142,26 @@ function fmt(n) {
   return Number(n).toLocaleString('en-US');
 }
 
+function fillSeries(series, days) {
+  const byDate = new Map((series || []).map(s => [s.date, s]));
+  const out = [];
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - days + 1);
+  for (let i = 0; i < days; i++) {
+    const key = d.toISOString().slice(0, 10);
+    const row = byDate.get(key) || { date: key, pv: 0, vis: 0 };
+    out.push(row);
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+}
+
+function businessStatusText(b) {
+  if (b.traffic_enabled) return b.seo_enabled ? 'SEO 流量已接入' : '流量已接入 · Publisher 待开通';
+  return '流量未接入';
+}
+
 function setActiveTab(key) {
   document.querySelectorAll('#tabs .tab').forEach(t => {
     t.classList.toggle('active', t.dataset.key === key);
@@ -168,18 +191,18 @@ function renderSummary(data) {
 
   const cards = data.businesses.map(b => {
     const bizCls = 'biz biz-' + b.key;
-    if (b.seo_enabled) {
+    if (b.traffic_enabled) {
       return '<a class="biz-card" href="#' + b.key + '">' +
         '<span class="' + bizCls + '">' + b.display_name + '</span>' +
         '<span class="lang">' + b.language.toUpperCase() + '</span>' +
         '<div class="pv">' + fmt(b.pv_total) + '<span class="unit">PV</span></div>' +
-        '<div class="vis">' + fmt(b.visitors_total) + ' visitors · ' + b.path_count + ' 篇</div>' +
+        '<div class="vis">' + fmt(b.visitors_total) + ' visits · ' + b.path_count + ' URL</div>' +
         '</a>';
     }
     return '<a class="biz-card" href="#' + b.key + '">' +
       '<span class="' + bizCls + '">' + b.display_name + '</span>' +
       '<span class="lang">' + b.language.toUpperCase() + '</span>' +
-      '<div class="pending">闸门未开通</div>' +
+      '<div class="pending">' + businessStatusText(b) + '</div>' +
       '</a>';
   }).join('');
 
@@ -187,7 +210,7 @@ function renderSummary(data) {
     '<main style="padding:16px;max-width:720px;margin:0 auto;">' +
     '<div class="kpi-row">' +
       '<div class="kpi"><div class="label">总 PV</div><div class="value">' + fmt(totalPv) + '</div><div class="sub">' + data.days + ' 天 / 全业务</div></div>' +
-      '<div class="kpi"><div class="label">总 Visitors</div><div class="value">' + fmt(totalVis) + '</div><div class="sub">' + totalPaths + ' 个 URL</div></div>' +
+      '<div class="kpi"><div class="label">总 Visits</div><div class="value">' + fmt(totalVis) + '</div><div class="sub">Cloudflare visits，不等同严格 UV</div></div>' +
     '</div>' +
     '<div class="section-title">业务面板</div>' +
     '<div class="summary-grid">' + cards + '</div>' +
@@ -199,6 +222,7 @@ function renderBusiness(data) {
   destroyChart();
   const bizCls = 'biz biz-' + data.key;
   const seo = data.seo;
+  const domain = (data.domain || '').replace(/\/$/, '');
 
   let html = '<main style="padding:16px;max-width:720px;margin:0 auto;">';
   html += '<div style="margin-bottom:12px;"><span class="' + bizCls + '">' + data.display_name + '</span>' +
@@ -206,14 +230,14 @@ function renderBusiness(data) {
 
   if (!seo.enabled) {
     html += '<div class="placeholder">' +
-      '<div class="tag">SEO 流量</div>' +
-      '<div>该业务的 publisher 闸门尚未开通</div>' +
+      '<div class="tag">TRAFFIC</div>' +
+      '<div>该业务流量数据尚未接入</div>' +
       '<div class="note">' + escapeHtml(seo.note || '') + '</div>' +
       '</div>';
   } else {
     html += '<div class="kpi-row">' +
       '<div class="kpi"><div class="label">PV (' + data.days + '天)</div><div class="value">' + fmt(seo.pv_total) + '</div><div class="sub">最新: ' + (seo.latest_date || '—') + '</div></div>' +
-      '<div class="kpi"><div class="label">Visitors</div><div class="value">' + fmt(seo.visitors_total) + '</div><div class="sub">' + seo.path_count + ' 个 URL</div></div>' +
+      '<div class="kpi"><div class="label">Visits</div><div class="value">' + fmt(seo.visitors_total) + '</div><div class="sub">Cloudflare visits / UV 待独立接入</div></div>' +
       '</div>';
 
     html += '<div class="section-title">每日趋势</div>' +
@@ -224,10 +248,10 @@ function renderBusiness(data) {
       html += '<div class="empty-state">暂无数据</div>';
     } else {
       html += '<div class="path-table">' +
-        '<div class="path-row head"><div class="p">PATH</div><div class="n">PV</div><div class="n">VIS</div></div>' +
+        '<div class="path-row head"><div class="p">PATH</div><div class="n">PV</div><div class="n">VISITS</div></div>' +
         seo.top_paths.map(p =>
           '<div class="path-row">' +
-            '<div class="p" title="' + escapeHtml(p.path) + '"><a href="https://oaklian.com' + escapeHtml(p.path) + '" target="_blank" rel="noopener" style="color:#3b4a6b;text-decoration:none">' + escapeHtml(p.path) + '</a></div>' +
+            '<div class="p" title="' + escapeHtml(p.path) + '"><a href="' + escapeHtml(domain + p.path) + '" target="_blank" rel="noopener" style="color:#3b4a6b;text-decoration:none">' + escapeHtml(p.path) + '</a></div>' +
             '<div class="n">' + fmt(p.pv) + '</div>' +
             '<div class="n">' + fmt(p.vis) + '</div>' +
           '</div>'
@@ -271,7 +295,7 @@ function renderBusiness(data) {
         html += '<div class="empty-state">暂无数据</div>';
       } else {
         html += '<div class="path-table">' +
-          '<div class="path-row head"><div class="p">' + escapeHtml(dd.title) + '</div><div class="n">PV</div><div class="n">VIS</div></div>' +
+          '<div class="path-row head"><div class="p">' + escapeHtml(dd.title) + '</div><div class="n">PV</div><div class="n">VISITS</div></div>' +
           rows.map(function(r) {
             return '<div class="path-row">' +
               '<div class="p" title="' + escapeHtml(r.value) + '">' + escapeHtml(r.value) + '</div>' +
@@ -312,16 +336,17 @@ function renderBusiness(data) {
   }
 
   if (seo.enabled && seo.series && seo.series.length) {
+    const filledSeries = fillSeries(seo.series, data.days);
     const ctx = document.getElementById('trend-chart').getContext('2d');
     currentChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: seo.series.map(s => s.date.slice(5)),
+        labels: filledSeries.map(s => s.date.slice(5)),
         datasets: [
-          { label: 'PV', data: seo.series.map(s => s.pv),
+          { label: 'PV', data: filledSeries.map(s => s.pv),
             borderColor: '#1e2a4a', backgroundColor: 'rgba(30,42,74,0.08)',
             tension: 0.3, fill: true, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 },
-          { label: 'Visitors', data: seo.series.map(s => s.vis),
+          { label: 'Visits', data: filledSeries.map(s => s.vis),
             borderColor: '#b8965a', backgroundColor: 'rgba(184,150,90,0.06)',
             tension: 0.3, fill: false, pointRadius: 3, pointHoverRadius: 5, borderWidth: 2 }
         ]

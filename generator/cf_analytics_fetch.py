@@ -19,6 +19,37 @@ from psycopg2.extras import execute_values
 
 GRAPHQL_ENDPOINT = "https://api.cloudflare.com/client/v4/graphql"
 
+ANALYTICS_SOURCES = [
+    {
+        "business": "oaklian",
+        "language": "en",
+        "site_tag_env": "CF_SITE_TAG",
+        "required": True,
+        "path_prefixes": ["/en/insights/"],
+    },
+    {
+        "business": "jnono",
+        "language": "zh",
+        "site_tag_env": "CF_SITE_TAG_JNONO",
+        "required": False,
+        "path_prefixes": None,
+    },
+    {
+        "business": "pricvo",
+        "language": "en",
+        "site_tag_env": "CF_SITE_TAG_PRICVO",
+        "required": False,
+        "path_prefixes": None,
+    },
+    {
+        "business": "recossi",
+        "language": "en",
+        "site_tag_env": "CF_SITE_TAG_RECOSSI",
+        "required": False,
+        "path_prefixes": None,
+    },
+]
+
 GRAPHQL_QUERY = """
 query($accountTag: String!, $siteTag: String!, $start: Time!, $end: Time!) {
   viewer {
@@ -107,13 +138,11 @@ def fetch_rum(token: str, account_tag: str, site_tag: str, start: str, end: str)
     return groups
 
 
-def classify(path: str):
-    """Map URL path -> (business, language). Return None to skip."""
-    if path.startswith("/en/insights/"):
-        return ("oaklian", "en")
-    if path.startswith("/zh/insights/"):
-        return ("jnono", "zh")
-    return None
+def path_allowed(path: str, prefixes):
+    """Return True when a source should collect this path."""
+    if prefixes is None:
+        return True
+    return any(path.startswith(prefix) for prefix in prefixes)
 
 
 def upsert_rows(conn, target_date, rows):
@@ -141,35 +170,43 @@ def main():
 
     token = get_env("CF_API_TOKEN")
     account_tag = get_env("CF_ACCOUNT_ID")
-    site_tag = get_env("CF_SITE_TAG")
     db_url = get_env("DATABASE_URL")
 
     target_date, start, end = yesterday_utc_window()
     logging.info("Fetching RUM for %s (%s -> %s)", target_date, start, end)
 
-    groups = fetch_rum(token, account_tag, site_tag, start, end)
-    logging.info("CF returned %d path groups (all paths, unfiltered)", len(groups))
-
-    rows = []
-    skipped = 0
-    for g in groups:
-        path = g.get("dimensions", {}).get("requestPath") or ""
-        bucket = classify(path)
-        if bucket is None:
-            skipped += 1
-            continue
-        business, language = bucket
-        pageviews = int(g.get("count") or 0)
-        visitors = int((g.get("sum") or {}).get("visits") or 0)
-        rows.append((target_date, business, language, path, pageviews, visitors))
-
-    logging.info("Filtered: %d SEO rows, %d non-SEO paths skipped", len(rows), skipped)
-
     conn = psycopg2.connect(db_url)
     try:
-        n = upsert_rows(conn, target_date, rows)
-        logging.info("Upserted %d rows into analytics_daily", n)
-        fetch_and_upsert_dimensions(conn, token, account_tag, site_tag, target_date, start, end)
+        total_rows = 0
+        for source in ANALYTICS_SOURCES:
+            site_tag = os.environ.get(source["site_tag_env"])
+            if not site_tag:
+                msg = "Missing env var %s for %s"
+                if source.get("required"):
+                    logging.error(msg, source["site_tag_env"], source["business"])
+                    sys.exit(2)
+                logging.info("Skipping %s: %s not configured", source["business"], source["site_tag_env"])
+                continue
+
+            groups = fetch_rum(token, account_tag, site_tag, start, end)
+            logging.info("%s: CF returned %d path groups", source["business"], len(groups))
+
+            rows = []
+            skipped = 0
+            for g in groups:
+                path = g.get("dimensions", {}).get("requestPath") or ""
+                if not path_allowed(path, source.get("path_prefixes")):
+                    skipped += 1
+                    continue
+                pageviews = int(g.get("count") or 0)
+                visitors = int((g.get("sum") or {}).get("visits") or 0)
+                rows.append((target_date, source["business"], source["language"], path, pageviews, visitors))
+
+            logging.info("%s: filtered %d rows, skipped %d paths", source["business"], len(rows), skipped)
+            total_rows += upsert_rows(conn, target_date, rows)
+            fetch_and_upsert_dimensions(conn, token, account_tag, site_tag, target_date, start, end, source)
+
+        logging.info("Upserted %d total rows into analytics_daily", total_rows)
     finally:
         conn.close()
 
@@ -325,13 +362,13 @@ def upsert_geo_rows(conn, target_date, business, language, dim_results):
     return len(rows)
 
 
-def fetch_and_upsert_dimensions(conn, token, account_tag, site_tag, target_date, start, end):
-    logging.info("Fetching geo/device/referer dimensions for %s", target_date)
+def fetch_and_upsert_dimensions(conn, token, account_tag, site_tag, target_date, start, end, source):
+    logging.info("%s: fetching geo/device/referer dimensions for %s", source["business"], target_date)
     dim_results = fetch_dimensions(token, account_tag, site_tag, start, end)
     counts = {alias: len(dim_results.get(alias, [])) for alias, _ in DIM_MAP}
-    logging.info("CF returned dimension groups: %s", counts)
-    n = upsert_geo_rows(conn, target_date, "oaklian", "en", dim_results)
-    logging.info("Upserted %d rows into analytics_geo_daily", n)
+    logging.info("%s: CF returned dimension groups: %s", source["business"], counts)
+    n = upsert_geo_rows(conn, target_date, source["business"], source["language"], dim_results)
+    logging.info("%s: upserted %d rows into analytics_geo_daily", source["business"], n)
 
 # === SPRINT 2D GEO/DEVICE/REFERER APPEND END ===
 

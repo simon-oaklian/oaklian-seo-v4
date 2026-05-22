@@ -1201,10 +1201,38 @@ def _fetch_business_seo(cur, business: str, days: int = 30):
 
 
 BUSINESS_CONFIG = {
-    "oaklian": {"display_name": "Oaklian",  "language": "en", "seo_enabled": True},
-    "pricvo":  {"display_name": "Pricvo",   "language": "en", "seo_enabled": False},
-    "jnono":   {"display_name": "Jnono",    "language": "zh", "seo_enabled": False},
-    "recossi": {"display_name": "Recossi",  "language": "en", "seo_enabled": False},
+    "oaklian": {
+        "display_name": "Oaklian",
+        "language": "en",
+        "domain": "https://oaklian.com",
+        "seo_enabled": True,
+        "traffic_enabled": True,
+        "traffic_note": "Cloudflare Web Analytics connected",
+    },
+    "pricvo": {
+        "display_name": "Pricvo",
+        "language": "en",
+        "domain": "https://pricvo.com",
+        "seo_enabled": False,
+        "traffic_enabled": bool(os.getenv("CF_SITE_TAG_PRICVO")),
+        "traffic_note": "Traffic source not configured yet; connect after affiliate/product pages are ready",
+    },
+    "jnono": {
+        "display_name": "Jnono",
+        "language": "zh",
+        "domain": "https://jnono.com",
+        "seo_enabled": False,
+        "traffic_enabled": bool(os.getenv("CF_SITE_TAG_JNONO")),
+        "traffic_note": "Traffic source not configured yet; good candidate to connect next",
+    },
+    "recossi": {
+        "display_name": "Recossi",
+        "language": "en",
+        "domain": "https://jzozo.com",
+        "seo_enabled": False,
+        "traffic_enabled": bool(os.getenv("CF_SITE_TAG_RECOSSI")),
+        "traffic_note": "Platform still in build-out; connect basic traffic before GMV later",
+    },
 }
 
 
@@ -1236,7 +1264,8 @@ def analytics_summary(days: int = 30):
     with db_conn() as conn:
         with conn.cursor() as cur:
             for biz, cfg in BUSINESS_CONFIG.items():
-                seo = _fetch_business_seo(cur, biz, days) if cfg["seo_enabled"] else {
+                traffic_enabled = cfg.get("traffic_enabled", cfg["seo_enabled"])
+                seo = _fetch_business_seo(cur, biz, days) if traffic_enabled else {
                     "pv_total": 0,
                     "visitors_total": 0,
                     "path_count": 0,
@@ -1248,7 +1277,10 @@ def analytics_summary(days: int = 30):
                     "key": biz,
                     "display_name": cfg["display_name"],
                     "language": cfg["language"],
+                    "domain": cfg.get("domain"),
                     "seo_enabled": cfg["seo_enabled"],
+                    "traffic_enabled": traffic_enabled,
+                    "traffic_note": cfg.get("traffic_note", ""),
                     "pv_total": seo["pv_total"],
                     "visitors_total": seo["visitors_total"],
                     "path_count": seo["path_count"],
@@ -1265,7 +1297,8 @@ def analytics_business(biz: str, days: int = 30):
     days = max(1, min(int(days), 365))
     cfg = BUSINESS_CONFIG[biz]
 
-    if cfg["seo_enabled"]:
+    traffic_enabled = cfg.get("traffic_enabled", cfg["seo_enabled"])
+    if traffic_enabled:
         with db_conn() as conn:
             with conn.cursor() as cur:
                 seo = _fetch_business_seo(cur, biz, days)
@@ -1274,6 +1307,7 @@ def analytics_business(biz: str, days: int = 30):
                 breakdown = _fetch_business_breakdown(cur, biz, days)
         seo_block = {
             "enabled": True,
+            "publisher_enabled": cfg["seo_enabled"],
             "pv_total": seo["pv_total"],
             "visitors_total": seo["visitors_total"],
             "path_count": seo["path_count"],
@@ -1283,7 +1317,7 @@ def analytics_business(biz: str, days: int = 30):
             "breakdown": breakdown,
         }
     else:
-        seo_block = {"enabled": False, "note": "SEO publisher not yet enabled for this business"}
+        seo_block = {"enabled": False, "note": cfg.get("traffic_note", "Traffic source not configured yet")}
 
     affiliate_block = {"enabled": False, "note": "pending integration"} if biz == "pricvo" else None
     ecommerce_block = {"enabled": False, "note": "pending integration"} if biz == "recossi" else None
@@ -1292,6 +1326,8 @@ def analytics_business(biz: str, days: int = 30):
         "key": biz,
         "display_name": cfg["display_name"],
         "language": cfg["language"],
+        "domain": cfg.get("domain"),
+        "traffic_enabled": cfg.get("traffic_enabled", cfg["seo_enabled"]),
         "days": days,
         "seo": seo_block,
     }
