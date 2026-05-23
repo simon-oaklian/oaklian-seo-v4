@@ -28,6 +28,29 @@ PROMPT_FILES = {
     'recossi': '/app/prompts/xhs_recossi_zh.txt',
 }
 
+COMMON_CHINESE_OUTPUT_RULES = """
+
+# Shared Xiaohongshu output rule
+The source article may be English, Chinese, or mixed. Always translate, localize,
+and rewrite it into Simplified Chinese Xiaohongshu copy. Do not keep the source as
+an English summary. Brand names and short technical terms such as CSLB, permit,
+vanity, remodel, shipping, solid wood may stay in English only when natural.
+The JSON title and body must be primarily Simplified Chinese.
+"""
+
+
+def cjk_count(text: str) -> int:
+    return len(re.findall(r'[\u3400-\u9fff]', text or ''))
+
+
+def ensure_chinese_output(title: str, body: str):
+    combined = (title or '') + '\n' + (body or '')
+    chinese_chars = cjk_count(combined)
+    if chinese_chars < 20:
+        print('error: generated XHS draft is not Chinese enough; refusing to save')
+        print('title preview:', (title or '')[:80])
+        print('body preview:', (body or '')[:180])
+        sys.exit(1)
 
 
 def content_fingerprint(title: str, body: str) -> str:
@@ -65,7 +88,7 @@ def main():
         print(f'error: prompt file not found: {prompt_file}')
         sys.exit(1)
     with open(prompt_file, encoding='utf-8') as f:
-        system_prompt = f.read()
+        system_prompt = f.read() + COMMON_CHINESE_OUTPUT_RULES
 
     cur.execute(
         "SELECT id FROM xhs_accounts WHERE business=%s AND enabled=true ORDER BY id LIMIT 1",
@@ -91,6 +114,7 @@ def main():
     title = draft['title']
     bodytext = draft['body']
     tags = draft.get('tags', [])
+    ensure_chinese_output(title, bodytext)
 
     fp = content_fingerprint(title, bodytext)
 
