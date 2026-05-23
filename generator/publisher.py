@@ -67,12 +67,23 @@ JNONO_ARTICLE_TEMPLATE = """<!doctype html>
     article ul,article ol{{padding-left:24px;margin:0 0 20px;}}
     article li{{margin-bottom:8px;}}
     article strong{{color:#061a35;font-weight:900;}}
+    .article-figure{{margin:46px 0;text-align:center;position:relative;display:flex;flex-direction:column;align-items:center}}
+    .article-figure .img-wrap{{position:relative;display:inline-block;line-height:0;max-width:720px;width:100%}}
+    .article-figure img{{width:100%;aspect-ratio:16/9;height:auto;max-height:430px;object-fit:cover;border-radius:8px;box-shadow:0 4px 12px rgba(15,29,58,.10);display:block;margin:0 auto;cursor:zoom-in;transition:transform .15s ease}}
+    .article-figure img:hover{{transform:scale(1.01)}}
+    .article-figure .zoom-hint{{position:absolute;bottom:12px;right:12px;width:36px;height:36px;border-radius:50%;background:rgba(15,29,58,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:none;backdrop-filter:blur(4px);transition:background .15s ease,transform .15s ease;line-height:1}}
+    .article-figure .img-wrap:hover .zoom-hint{{background:rgba(15,29,58,.85);transform:scale(1.08)}}
+    .article-figure figcaption{{font-size:.85rem;color:var(--muted);margin-top:14px;font-style:italic;line-height:1.5;padding:0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:600px}}
+    dialog.lightbox{{border:none;padding:0;background:rgba(0,0,0,.92);max-width:100vw;max-height:100vh;width:100vw;height:100vh;margin:0;overflow:hidden}}
+    dialog.lightbox::backdrop{{background:rgba(0,0,0,.92)}}
+    dialog.lightbox img{{max-width:95vw;max-height:95vh;display:block;margin:auto;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);cursor:zoom-out;border-radius:4px}}
+    dialog.lightbox .lb-close{{position:absolute;top:16px;right:20px;background:transparent;border:none;color:#fff;font-size:32px;cursor:pointer;line-height:1;padding:8px 12px;z-index:10}}
     .bottom-card{{margin-top:18px;padding:24px 26px;display:flex;align-items:center;justify-content:space-between;gap:18px;}}
     .bottom-card h2{{margin:0 0 6px;font-size:24px;color:var(--text);}}
     .bottom-card p{{margin:0;color:var(--muted);font-size:14px;line-height:1.7;}}
     .cta-actions{{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}}
     .article-footer{{margin-top:24px;color:#7b8796;font-size:13px;text-align:center;}}
-    @media(max-width:820px){{.top-actions a:not(.primary){{display:none}}.article-shell{{padding:16px 14px 54px}}.hero-grid{{grid-template-columns:1fr}}.hero-card,.side-card,.article-card,.bottom-card{{border-radius:16px}}.hero-card,.article-card{{padding:22px 20px}}h1{{font-size:28px}}article{{font-size:16px}}article h2{{font-size:22px}}.bottom-card{{display:block}}.cta-actions{{justify-content:flex-start;margin-top:16px}}}}
+    @media(max-width:820px){{.top-actions a:not(.primary){{display:none}}.article-shell{{padding:16px 14px 54px}}.hero-grid{{grid-template-columns:1fr}}.hero-card,.side-card,.article-card,.bottom-card{{border-radius:16px}}.hero-card,.article-card{{padding:22px 20px}}h1{{font-size:28px}}article{{font-size:16px}}article h2{{font-size:22px}}.article-figure{{margin:34px 0}}.article-figure img{{max-height:320px;border-radius:6px}}.article-figure .zoom-hint{{width:30px;height:30px;font-size:15px;bottom:8px;right:8px}}.bottom-card{{display:block}}.cta-actions{{justify-content:flex-start;margin-top:16px}}}}
   </style>
 </head>
 <body>
@@ -114,6 +125,17 @@ JNONO_ARTICLE_TEMPLATE = """<!doctype html>
     </section>
     <footer class="article-footer">&copy; PrepLicense &middot; CSLB &#20013;&#25991;&#22791;&#32771;&#35757;&#32451;</footer>
   </main>
+  <dialog class="lightbox" id="lb"><button class="lb-close" aria-label="Close">&times;</button><img id="lb-img" alt=""></dialog>
+  <script>
+  (function(){{
+    var lb=document.getElementById('lb'),img=document.getElementById('lb-img');
+    if(!lb||!lb.showModal)return;
+    document.querySelectorAll('.article-figure img').forEach(function(el){{
+      el.addEventListener('click',function(){{img.src=el.currentSrc||el.src;img.alt=el.alt||'';lb.showModal();}});
+    }});
+    lb.addEventListener('click',function(e){{if(e.target===lb||e.target===img||e.target.classList.contains('lb-close'))lb.close();}});
+  }})();
+  </script>
   {cf_snippet}
 </body>
 </html>
@@ -452,6 +474,32 @@ def _wrap_images_in_figures(body_html, sizes):
     return img_pattern.sub(repl, body_html)
 
 
+def _wrap_any_article_images_in_figures(body_html, sizes=None):
+    """Apply Oaklian-style figure markup to any article image src."""
+    sizes = sizes or {}
+    img_pattern = re.compile(r'<p>\s*<img\s+([^>]*?)src="([^"]+)"([^>]*?)/?>\s*</p>', re.IGNORECASE)
+
+    def repl(m):
+        pre_attrs = m.group(1)
+        src = m.group(2)
+        post_attrs = m.group(3)
+        all_attrs = (pre_attrs + ' ' + post_attrs).strip()
+        alt_match = re.search(r'alt="([^"]*)"', all_attrs, re.IGNORECASE)
+        alt_text = alt_match.group(1) if alt_match else ''
+        basename = Path(src).name
+        dim_attrs = ''
+        wh = sizes.get(basename)
+        if wh:
+            w, h = wh
+            dim_attrs = f' width="{w}" height="{h}"'
+        img_tag = f'<img src="{html.escape(src)}" alt="{html.escape(alt_text)}" loading="lazy" decoding="async"{dim_attrs}>'
+        zoom_hint = '<span class="zoom-hint" aria-hidden="true">&#9906;</span>'
+        caption_html = f'<figcaption>{html.escape(alt_text)}</figcaption>' if alt_text else ''
+        return f'<figure class="article-figure"><span class="img-wrap">{img_tag}{zoom_hint}</span>{caption_html}</figure>'
+
+    return img_pattern.sub(repl, body_html)
+
+
 def _process_next_json_images(article, cfg, slug):
     """Copy SEO article images into a Next.js public folder and rewrite markdown refs."""
     md_text = article.get('draft_md') or ''
@@ -538,6 +586,7 @@ def _render_next_json_payload(article, cfg):
     article = dict(article)
     article['draft_md'] = _process_next_json_images(article, cfg, slug)
     body_html = md_lib.markdown(article.get('draft_md') or '', extensions=['extra', 'sane_lists'])
+    body_html = _wrap_any_article_images_in_figures(body_html)
     pub = _coerce_dt(article.get('published_at'))
     return {
         'slug': slug,
@@ -577,6 +626,7 @@ def _render_jnono_article_html(article, cfg):
     if 'url' not in schema_org:
         schema_org['url'] = canonical
     body_html = md_lib.markdown(article.get('draft_md') or '', extensions=['extra', 'sane_lists'])
+    body_html = _wrap_images_in_figures(body_html, article.get('_img_sizes') or {})
     pub = _coerce_dt(article.get('published_at'))
     return JNONO_ARTICLE_TEMPLATE.format(
         title_html=html.escape(title),
