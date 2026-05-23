@@ -39,46 +39,84 @@ JNONO_ARTICLE_TEMPLATE = """<!doctype html>
 {schema_json}
   </script>
   <style>
-    body{{background:#f6f7fb;color:#182033;font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}}
-    .blog-shell{{max-width:820px;margin:0 auto;padding:34px 20px 70px;}}
-    .blog-top{{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:34px;}}
-    .blog-brand{{font-weight:800;color:#14213d;text-decoration:none;font-size:20px;}}
-    .blog-nav{{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;}}
-    .blog-nav a{{color:#556070;text-decoration:none;}}
-    .blog-card{{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(20,33,61,.06);}}
-    .eyebrow{{color:#b8965a;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px;}}
-    h1{{font-size:30px;line-height:1.35;margin:0 0 12px;color:#14213d;}}
-    .meta{{color:#8a92a3;font-size:13px;margin-bottom:28px;}}
+    *{{box-sizing:border-box}}
+    body{{margin:0;background:linear-gradient(180deg,#f4f6fb 0%,#f7f8fc 46%,#eef2f8 100%);color:#13213a;font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}}
+    .blog-shell{{max-width:980px;margin:0 auto;padding:26px 20px 70px;}}
+    .blog-top{{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;}}
+    .blog-brand{{font-weight:900;color:#071b3a;text-decoration:none;font-size:22px;letter-spacing:-.02em;}}
+    .top-actions{{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}}
+    .top-link{{color:#526071;text-decoration:none;font-size:14px;font-weight:700;}}
+    .top-cta{{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 16px;border-radius:999px;background:#14213d;color:#fff;text-decoration:none;font-size:14px;font-weight:800;box-shadow:0 10px 22px rgba(20,33,61,.16);}}
+    .intro{{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;margin-bottom:18px;}}
+    .hero-card,.side-card,.blog-card,.bottom-cta{{background:rgba(255,255,255,.94);border:1px solid #e2e7f0;border-radius:22px;box-shadow:0 18px 48px rgba(20,33,61,.08);}}
+    .hero-card{{padding:28px 30px;}}
+    .side-card{{padding:22px;align-self:stretch;display:flex;flex-direction:column;justify-content:space-between;background:#14213d;color:#fff;}}
+    .eyebrow{{color:#b8965a;font-weight:900;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px;}}
+    h1{{font-size:34px;line-height:1.28;margin:0;color:#071b3a;letter-spacing:-.02em;}}
+    .meta{{color:#7a8495;font-size:13px;margin:16px 0 0;}}
+    .side-title{{font-size:20px;font-weight:900;line-height:1.35;margin:0 0 10px;}}
+    .side-copy{{font-size:14px;line-height:1.75;color:rgba(255,255,255,.78);margin:0 0 18px;}}
+    .side-cta{{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 15px;border-radius:999px;background:#fff;color:#14213d;text-decoration:none;font-size:14px;font-weight:900;}}
+    .blog-card{{padding:32px 34px;}}
     article{{font-size:17px;line-height:1.95;}}
-    article h2{{font-size:23px;line-height:1.45;color:#14213d;margin:38px 0 12px;}}
-    article h3{{font-size:19px;color:#14213d;margin:28px 0 10px;}}
+    article h2{{font-size:24px;line-height:1.42;color:#071b3a;margin:40px 0 14px;letter-spacing:-.01em;}}
+    article h2:first-child{{margin-top:0;}}
+    article h3{{font-size:20px;color:#071b3a;margin:30px 0 10px;}}
     article p{{margin:0 0 18px;}}
     article ul,article ol{{padding-left:24px;margin:0 0 20px;}}
     article li{{margin-bottom:8px;}}
-    article code{{background:#f0f2f5;padding:2px 6px;border-radius:5px;}}
-    .blog-footer{{margin-top:28px;color:#8a92a3;font-size:13px;text-align:center;}}
-    @media(max-width:640px){{.blog-shell{{padding:22px 14px 52px}}.blog-card{{padding:20px;border-radius:14px}}h1{{font-size:25px}}article{{font-size:16px}}}}
+    article strong{{color:#071b3a;font-weight:900;}}
+    article code{{background:#eef2f7;padding:2px 6px;border-radius:5px;}}
+    .bottom-cta{{margin-top:18px;padding:24px 26px;display:flex;justify-content:space-between;align-items:center;gap:18px;}}
+    .bottom-cta h2{{font-size:22px;line-height:1.35;color:#071b3a;margin:0 0 6px;}}
+    .bottom-cta p{{font-size:14px;line-height:1.7;color:#657185;margin:0;}}
+    .cta-actions{{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;}}
+    .btn-primary,.btn-secondary{{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 17px;border-radius:999px;text-decoration:none;font-weight:900;font-size:14px;white-space:nowrap;}}
+    .btn-primary{{background:#14213d;color:#fff;}}
+    .btn-secondary{{background:#f1f4f8;color:#14213d;border:1px solid #dce3ec;}}
+    .blog-footer{{margin-top:24px;color:#8a92a3;font-size:13px;text-align:center;}}
+    @media(max-width:760px){{.blog-shell{{padding:18px 14px 52px}}.blog-top{{align-items:flex-start}}.top-actions{{justify-content:flex-end}}.top-link{{display:none}}.intro{{grid-template-columns:1fr}}.hero-card,.blog-card,.side-card,.bottom-cta{{border-radius:16px}}.hero-card{{padding:22px 20px}}.side-card{{padding:20px}}h1{{font-size:27px}}.blog-card{{padding:22px 20px}}article{{font-size:16px}}article h2{{font-size:22px}}.bottom-cta{{display:block}}.cta-actions{{justify-content:flex-start;margin-top:16px}}}}
   </style>
 </head>
 <body>
   <main class="blog-shell">
     <header class="blog-top">
       <a class="blog-brand" href="/">PrepLicense</a>
-      <nav class="blog-nav">
-        <a href="/blog/">备考文章</a>
-        <a href="/pricing.html">会员方案</a>
-        <a href="/">开始训练</a>
-      </nav>
+      <div class="top-actions">
+        <a class="top-link" href="/pricing.html">&#20250;&#21592;&#26041;&#26696;</a>
+        <a class="top-cta" href="/">&#24320;&#22987;&#35757;&#32451;</a>
+      </div>
     </header>
+    <section class="intro">
+      <div class="hero-card">
+        <p class="eyebrow">CSLB &#20013;&#25991;&#22791;&#32771;</p>
+        <h1>{title_html}</h1>
+        <p class="meta">&#21457;&#24067;&#20110; {published_human} &middot; &#38754;&#21521; CSLB &#20013;&#25991;/ESL &#32771;&#29983;</p>
+      </div>
+      <aside class="side-card">
+        <div>
+          <p class="side-title">&#35835;&#23436;&#39532;&#19978;&#32451;&#19968;&#32452;&#39064;</p>
+          <p class="side-copy">&#25991;&#31456;&#24110;&#20320;&#29702;&#35299;&#38519;&#38449;&#65292;&#39064;&#24211;&#24110;&#20320;&#25226;&#21453;&#24212;&#32451;&#20986;&#26469;&#12290;&#22238;&#21040;&#35757;&#32451;&#39029;&#32487;&#32493;&#21047;&#27861;&#24459;&#39064;&#21644; trade &#39064;&#12290;</p>
+        </div>
+        <a class="side-cta" href="/">&#36827;&#20837;&#35757;&#32451;</a>
+      </aside>
+    </section>
     <section class="blog-card">
-      <p class="eyebrow">CSLB 备考文章</p>
-      <h1>{title_html}</h1>
-      <p class="meta">发布于 {published_human}</p>
       <article>
 {body_html}
       </article>
     </section>
-    <footer class="blog-footer">© PrepLicense · CSLB 中文备考训练</footer>
+    <section class="bottom-cta">
+      <div>
+        <h2>&#24819;&#25226;&#36825;&#31867;&#39064;&#23569;&#38169;&#20960;&#36947;&#65311;</h2>
+        <p>&#22238;&#21040; PrepLicense &#20570;&#19968;&#32452;&#27169;&#25311;&#39064;&#65292;&#25226;&#25991;&#31456;&#37324;&#30340;&#26041;&#27861;&#30452;&#25509;&#29992;&#22312;&#39064;&#24178;&#38405;&#35835;&#37324;&#12290;</p>
+      </div>
+      <div class="cta-actions">
+        <a class="btn-primary" href="/">&#24320;&#22987;&#35757;&#32451;</a>
+        <a class="btn-secondary" href="/pricing.html">&#26597;&#30475;&#20250;&#21592;&#26041;&#26696;</a>
+      </div>
+    </section>
+    <footer class="blog-footer">&copy; PrepLicense &middot; CSLB &#20013;&#25991;&#22791;&#32771;&#35757;&#32451;</footer>
   </main>
   {cf_snippet}
 </body>
