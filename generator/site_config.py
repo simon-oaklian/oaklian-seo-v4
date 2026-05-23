@@ -64,7 +64,30 @@ SITES = {
         },
     },
     # Placeholders — fill in when each site is onboarded to publisher.
-    "pricvo":  None,
+    "pricvo": {
+        "root_path": Path("/pricvo-content"),
+        "insights_subpath": ".",
+        "domain": "https://pricvo.com",
+        "insights_url_prefix": "/blog",
+        "language": "en",
+        "template": "pricvo_next_json",
+        "brand_name": "Pricvo",
+        "brand_link": "https://pricvo.com/",
+        "brand_title_suffix": "Pricvo",
+        "eyebrow_label": "Pricvo Guide",
+        "colors": {
+            "primary": "#1c1917",
+            "accent":  "#78716c",
+            "bg":      "#f9f8f6",
+            "text":    "#292524",
+            "muted":   "#78716c",
+            "border":  "#e7e5e4",
+        },
+        "fonts": {
+            "body":    '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+            "heading": '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+        },
+    },
     "recossi": None,
 }
 

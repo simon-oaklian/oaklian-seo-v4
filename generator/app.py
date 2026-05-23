@@ -958,6 +958,8 @@ def article_list(status: str = "pending", limit: int = 20, business: str = ""):
             return f"https://oaklian.com/en/insights/{slug}/"
         if row[1] == "jnono" and row[2] == "zh":
             return f"https://jnono.com/blog/{slug}/"
+        if row[1] == "pricvo" and row[2] == "en":
+            return f"https://pricvo.com/blog/{slug}"
         return None
 
     return {
@@ -1232,17 +1234,17 @@ BUSINESS_CONFIG = {
         "display_name": "Pricvo",
         "language": "en",
         "domain": "https://pricvo.com",
-        "seo_enabled": False,
+        "seo_enabled": True,
         "traffic_enabled": bool(os.getenv("CF_SITE_TAG_PRICVO")),
-        "traffic_note": "Traffic source not configured yet; connect after affiliate/product pages are ready",
+        "traffic_note": "Cloudflare Web Analytics connected",
     },
     "jnono": {
         "display_name": "Jnono",
         "language": "zh",
         "domain": "https://jnono.com",
-        "seo_enabled": False,
+        "seo_enabled": True,
         "traffic_enabled": bool(os.getenv("CF_SITE_TAG_JNONO")),
-        "traffic_note": "Traffic source not configured yet; good candidate to connect next",
+        "traffic_note": "Cloudflare Web Analytics connected",
     },
     "recossi": {
         "display_name": "Recossi",

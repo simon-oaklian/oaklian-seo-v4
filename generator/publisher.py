@@ -419,6 +419,50 @@ def _wrap_images_in_figures(body_html, sizes):
 
 
 
+def _render_pricvo_payload(article, cfg):
+    meta = _coerce_meta(article.get('meta_json'))
+    title = meta.get('title') or 'Untitled'
+    description = meta.get('meta_description') or ''
+    slug = meta.get('slug') or _slugify(title)
+    canonical = f"{cfg['domain']}{cfg['insights_url_prefix']}/{slug}"
+    schema_org = meta.get('schema_org') or {}
+    if 'url' not in schema_org:
+        schema_org['url'] = canonical
+    if 'headline' not in schema_org:
+        schema_org['headline'] = title
+    if 'description' not in schema_org and description:
+        schema_org['description'] = description
+
+    body_html = md_lib.markdown(article.get('draft_md') or '', extensions=['extra', 'sane_lists'])
+    pub = _coerce_dt(article.get('published_at'))
+    return {
+        'slug': slug,
+        'title': title,
+        'description': description,
+        'bodyHtml': body_html,
+        'canonicalUrl': canonical,
+        'publishedAt': pub.isoformat(),
+        'updatedAt': pub.isoformat(),
+        'schemaOrg': schema_org,
+    }
+
+
+def _publish_pricvo_json(article, cfg):
+    meta = _coerce_meta(article.get('meta_json'))
+    slug = meta.get('slug')
+    if not slug:
+        return {'ok': False, 'error': 'meta_json.slug is missing'}
+    out_dir = cfg['root_path']
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_path = out_dir / f'{slug}.json'
+    payload = _render_pricvo_payload(article, cfg)
+    tmp_path = out_path.with_suffix('.json.tmp')
+    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    tmp_path.replace(out_path)
+    canonical = f"{cfg['domain']}{cfg['insights_url_prefix']}/{slug}"
+    return {'ok': True, 'url': canonical, 'path': str(out_path)}
+
+
 def _render_jnono_article_html(article, cfg):
     meta = _coerce_meta(article.get('meta_json'))
     title = meta.get('title') or 'Untitled'
@@ -652,6 +696,9 @@ def publish(article, db_conn):
         slug = meta.get('slug')
         if not slug:
             return {'ok': False, 'error': 'meta_json.slug is missing'}
+
+        if cfg.get('template') == 'pricvo_next_json':
+            return _publish_pricvo_json(article, cfg)
 
         insights_dir = cfg['root_path'] / cfg['insights_subpath']
         out_dir = insights_dir / slug
