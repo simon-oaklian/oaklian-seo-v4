@@ -960,6 +960,8 @@ def article_list(status: str = "pending", limit: int = 20, business: str = ""):
             return f"https://jnono.com/blog/{slug}/"
         if row[1] == "pricvo" and row[2] == "en":
             return f"https://pricvo.com/blog/{slug}"
+        if row[1] == "recossi" and row[2] == "en":
+            return f"https://jzozo.com/blog/{slug}"
         return None
 
     return {
@@ -1250,9 +1252,9 @@ BUSINESS_CONFIG = {
         "display_name": "Recossi",
         "language": "en",
         "domain": "https://jzozo.com",
-        "seo_enabled": False,
+        "seo_enabled": True,
         "traffic_enabled": bool(os.getenv("CF_SITE_TAG_RECOSSI")),
-        "traffic_note": "Platform still in build-out; connect basic traffic before GMV later",
+        "traffic_note": "Cloudflare Web Analytics connected; ecommerce GMV pending integration",
     },
 }
 

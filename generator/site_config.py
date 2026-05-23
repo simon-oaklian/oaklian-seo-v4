@@ -88,7 +88,30 @@ SITES = {
             "heading": '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
         },
     },
-    "recossi": None,
+    "recossi": {
+        "root_path": Path("/recossi-content"),
+        "insights_subpath": ".",
+        "domain": "https://jzozo.com",
+        "insights_url_prefix": "/blog",
+        "language": "en",
+        "template": "next_json",
+        "brand_name": "RECOSSI",
+        "brand_link": "https://jzozo.com/",
+        "brand_title_suffix": "RECOSSI",
+        "eyebrow_label": "RECOSSI Guide",
+        "colors": {
+            "primary": "#2b2620",
+            "accent":  "#b08f6f",
+            "bg":      "#f7f2ea",
+            "text":    "#2b2620",
+            "muted":   "#6a6f72",
+            "border":  "#ddd0bc",
+        },
+        "fonts": {
+            "body":    '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',
+            "heading": 'Georgia,serif',
+        },
+    },
 }
 
 

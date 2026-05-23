@@ -419,7 +419,7 @@ def _wrap_images_in_figures(body_html, sizes):
 
 
 
-def _render_pricvo_payload(article, cfg):
+def _render_next_json_payload(article, cfg):
     meta = _coerce_meta(article.get('meta_json'))
     title = meta.get('title') or 'Untitled'
     description = meta.get('meta_description') or ''
@@ -447,7 +447,7 @@ def _render_pricvo_payload(article, cfg):
     }
 
 
-def _publish_pricvo_json(article, cfg):
+def _publish_next_json(article, cfg):
     meta = _coerce_meta(article.get('meta_json'))
     slug = meta.get('slug')
     if not slug:
@@ -455,7 +455,7 @@ def _publish_pricvo_json(article, cfg):
     out_dir = cfg['root_path']
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f'{slug}.json'
-    payload = _render_pricvo_payload(article, cfg)
+    payload = _render_next_json_payload(article, cfg)
     tmp_path = out_path.with_suffix('.json.tmp')
     tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     tmp_path.replace(out_path)
@@ -697,8 +697,8 @@ def publish(article, db_conn):
         if not slug:
             return {'ok': False, 'error': 'meta_json.slug is missing'}
 
-        if cfg.get('template') == 'pricvo_next_json':
-            return _publish_pricvo_json(article, cfg)
+        if cfg.get('template') in ('pricvo_next_json', 'next_json'):
+            return _publish_next_json(article, cfg)
 
         insights_dir = cfg['root_path'] / cfg['insights_subpath']
         out_dir = insights_dir / slug
