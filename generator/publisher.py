@@ -452,6 +452,74 @@ def _wrap_images_in_figures(body_html, sizes):
     return img_pattern.sub(repl, body_html)
 
 
+def _process_next_json_images(article, cfg, slug):
+    """Copy SEO article images into a Next.js public folder and rewrite markdown refs."""
+    md_text = article.get('draft_md') or ''
+    images = article.get('images') or []
+    if isinstance(images, str):
+        try:
+            images = json.loads(images)
+        except Exception:
+            images = []
+    if not images:
+        return md_text
+
+    public_root = cfg.get('public_assets_path')
+    url_prefix = (cfg.get('public_assets_url_prefix') or '/seo-uploads').rstrip('/')
+    if not public_root:
+        return md_text
+
+    uploads_root = Path('/app/static/uploads')
+    out_dir = public_root / slug
+    out_dir.mkdir(parents=True, exist_ok=True)
+    copied = {}
+
+    def copy_idx(idx):
+        if idx in copied:
+            return copied[idx]
+        if idx < 1 or idx > len(images):
+            copied[idx] = None
+            return None
+        src_rel = images[idx - 1]
+        src_path = uploads_root / str(src_rel).replace('uploads/', '', 1).lstrip('/')
+        if not src_path.exists():
+            copied[idx] = None
+            return None
+        ext = src_path.suffix.lower() if src_path.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp') else '.jpeg'
+        dst_name = f'{idx}{ext}'
+        dst_path = out_dir / dst_name
+        try:
+            shutil.copyfile(src_path, dst_path)
+        except Exception:
+            copied[idx] = None
+            return None
+        copied[idx] = f'{url_prefix}/{slug}/{dst_name}'
+        return copied[idx]
+
+    def repl_markdown(m):
+        alt = m.group(1)
+        idx = int(m.group(2))
+        url = copy_idx(idx)
+        return f'![{alt}]({url})' if url else ''
+
+    # Standard placeholders used by generated drafts.
+    md_text = re.sub(r'!\[([^\]]*)\]\(IMG_(\d+)\)', repl_markdown, md_text)
+
+    # Older preview-style markdown may contain /static/uploads/{article_id}/{n}.jpeg.
+    def repl_static(m):
+        alt = m.group(1)
+        filename = m.group(2)
+        try:
+            idx = int(Path(filename).stem)
+        except Exception:
+            return ''
+        url = copy_idx(idx)
+        return f'![{alt}]({url})' if url else ''
+
+    md_text = re.sub(r'!\[([^\]]*)\]\(/static/uploads/\d+/(\d+\.[A-Za-z0-9]+)\)', repl_static, md_text)
+    return md_text
+
+
 
 def _render_next_json_payload(article, cfg):
     meta = _coerce_meta(article.get('meta_json'))
@@ -467,6 +535,8 @@ def _render_next_json_payload(article, cfg):
     if 'description' not in schema_org and description:
         schema_org['description'] = description
 
+    article = dict(article)
+    article['draft_md'] = _process_next_json_images(article, cfg, slug)
     body_html = md_lib.markdown(article.get('draft_md') or '', extensions=['extra', 'sane_lists'])
     pub = _coerce_dt(article.get('published_at'))
     return {

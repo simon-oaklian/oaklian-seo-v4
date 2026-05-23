@@ -66,6 +66,8 @@ SITES = {
     # Placeholders — fill in when each site is onboarded to publisher.
     "pricvo": {
         "root_path": Path("/pricvo-content"),
+        "public_assets_path": Path("/pricvo-public-seo-uploads"),
+        "public_assets_url_prefix": "/seo-uploads",
         "insights_subpath": ".",
         "domain": "https://pricvo.com",
         "insights_url_prefix": "/blog",
@@ -90,6 +92,8 @@ SITES = {
     },
     "recossi": {
         "root_path": Path("/recossi-content"),
+        "public_assets_path": Path("/recossi-public-seo-uploads"),
+        "public_assets_url_prefix": "/seo-uploads",
         "insights_subpath": ".",
         "domain": "https://jzozo.com",
         "insights_url_prefix": "/blog",
