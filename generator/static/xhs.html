@@ -175,28 +175,33 @@ function openXhsTool(name){
   if(!panel)return;
   panel.style.display="block";
   if(name==="research"){
-    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u7206\u6b3e\u8c03\u7814</div><div style="font-size:12px;color:#777;margin-bottom:8px">\u8c03\u7814\u53ef\u5171\u7528\uff0c\u4f46\u7ed3\u679c\u4f1a\u5e26\u5f53\u524d\u4e1a\u52a1\u9009\u9879\uff0c\u540e\u7eed\u751f\u6210\u8349\u7a3f\u4ecd\u9700\u4eba\u5de5\u5ba1\u6838\u3002</div><div style="display:flex;gap:6px"><input id="xhsResearchKw" placeholder="\u5173\u952e\u8bcd\uff0c\u5982 CSLB \u5907\u8003 / \u6d74\u5ba4\u67dc / \u5bb6\u5177" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px"><button onclick="doXhsResearch()" style="padding:9px 12px;border:0;border-radius:8px;background:#e91e63;color:#fff">\u641c\u7d22</button></div><div id="xhsResearchOut" style="margin-top:10px;font-size:12px;color:#555;white-space:pre-wrap;max-height:260px;overflow:auto"></div>';
+    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u7206\u6b3e\u8c03\u7814</div><div style="font-size:12px;color:#777;margin-bottom:8px">\u8c03\u7814\u53ef\u5171\u7528\uff0c\u641c\u7d22\u65f6\u4f1a\u5e26\u5f53\u524d\u4e1a\u52a1\u9009\u9879\u3002\u8c03\u7814\u7ed3\u679c\u7528\u6765\u53cd\u63a8\u9009\u9898\u548c\u6a21\u677f\uff0c\u4e0d\u81ea\u52a8\u53d1\u5e03\u3002</div><div style="display:flex;gap:6px"><input id="xhsResearchKw" placeholder="\u5173\u952e\u8bcd\uff0c\u5982 CSLB \u5907\u8003 / \u6d74\u5ba4\u67dc / \u5bb6\u5177" style="flex:1;padding:9px;border:1px solid #ddd;border-radius:8px"><button onclick="doXhsResearch()" style="padding:9px 12px;border:0;border-radius:8px;background:#e91e63;color:#fff">\u641c\u7d22</button></div><div id="xhsResearchOut" style="margin-top:10px;font-size:12px;color:#555;white-space:pre-wrap;max-height:260px;overflow:auto"></div>';
     return;
   }
   if(name==="content"){
-    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u5185\u5bb9\u751f\u6210</div><div style="font-size:12px;color:#777">\u4ece\u6587\u7ae0\u8be6\u60c5\u9875\u70b9\u751f\u6210\u5c0f\u7ea2\u4e66\uff0c\u4f1a\u6309 business \u81ea\u52a8\u9009\u5bf9\u5e94\u6a21\u677f\u3002\u5185\u5bb9\u5e94\u4fdd\u6301 Oaklian \u90a3\u79cd\u903b\u8f91\uff1a\u4e2d\u6587\u8868\u8fbe\uff0c\u4f46\u5fc5\u8981\u82f1\u6587\u672f\u8bed\u81ea\u7136\u4fdd\u7559\u3002</div>';
+    setDraftStatus("");
+    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u5185\u5bb9\u751f\u6210</div><div style="font-size:12px;color:#777;margin-bottom:8px">\u8fd9\u91cc\u5c55\u793a\u5df2\u7531 SEO V4 \u6587\u7ae0\u751f\u6210\u7684\u5c0f\u7ea2\u4e66\u5185\u5bb9\u3002\u53ef\u4ee5\u70b9\u8be6\u60c5\u770b\u56fe\u7247\uff0c\u70b9\u7f16\u8f91\u4fee\u6539\u6587\u6848\u548c\u6807\u7b7e\u3002</div><button class="xhs-tab on" onclick="setDraftStatus(\'\')">\u5168\u90e8\u5185\u5bb9</button> <button class="xhs-tab" onclick="setDraftStatus(\'pending\')">\u5f85\u53d1\u5e03</button>';
     return;
   }
   if(name==="publish"){
-    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u53d1\u5e03\u4e2d\u5fc3</div><div style="font-size:12px;color:#777">\u53d1\u5e03\u6309\u94ae\u53ea\u5bf9\u5f85\u53d1\u5e03\u8349\u7a3f\u5f00\u653e\u3002\u7cfb\u7edf\u4f1a\u6821\u9a8c\u8349\u7a3f business \u548c\u5df2\u7ed1\u5b9a\u8d26\u53f7\uff0c\u9632\u6b62\u8bef\u53d1\u3002</div>';
+    setDraftStatus("pending");
+    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u53d1\u5e03\u4e2d\u5fc3</div><div style="font-size:12px;color:#777;margin-bottom:8px">\u8fd9\u91cc\u5904\u7406\u5f85\u53d1\u3001\u5df2\u53d1\u3001\u5931\u8d25\u7684\u8349\u7a3f\u3002\u53d1\u5e03\u524d\u7cfb\u7edf\u4f1a\u6821\u9a8c business \u548c\u5df2\u7ed1\u5b9a\u8d26\u53f7\u3002</div><button class="xhs-tab on" onclick="setDraftStatus(\'pending\')">\u5f85\u53d1\u5e03</button> <button class="xhs-tab" onclick="setDraftStatus(\'published\')">\u5df2\u53d1\u5e03</button> <button class="xhs-tab" onclick="setDraftStatus(\'failed\')">\u5931\u8d25</button>';
     return;
   }
   if(name==="account"){
     loadAccount();
-    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u8d26\u53f7\u7ba1\u7406</div><div style="font-size:12px;color:#777">\u5f53\u524d\u53ea\u5efa\u7acb\u8d26\u53f7\u914d\u7f6e\u9aa8\u67b6\u3002Oaklian \u6cbf\u7528\u73b0\u6709\u53d1\u5e03\u901a\u9053\uff0c\u5176\u4ed6\u4e1a\u52a1\u5148\u4fdd\u6301\u672a\u7ed1\u5b9a\u3002</div>';
+    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u8d26\u53f7\u7ba1\u7406</div><div style="font-size:12px;color:#777">Oaklian \u6cbf\u7528\u73b0\u6709\u53d1\u5e03\u901a\u9053\u3002JNONO / Pricvo / Recossi \u672a\u7ed1\u5b9a\u65f6\u4f1a\u963b\u6b62\u53d1\u5e03\uff0c\u9632\u6b62\u8bef\u53d1\u5230\u522b\u7684\u4e1a\u52a1\u8d26\u53f7\u3002</div>';
     return;
   }
   if(name==="engage"){
-    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u4e92\u52a8\u7ba1\u7406</div><div style="font-size:12px;color:#777">\u8fd9\u91cc\u540e\u7eed\u53ea\u505a\u4eba\u5de5\u5f85\u529e\u548c\u56de\u590d\u8bb0\u5f55\uff0c\u4e0d\u505a\u81ea\u52a8\u70b9\u8d5e\u3001\u81ea\u52a8\u8bc4\u8bba\u3001\u81ea\u52a8\u79c1\u4fe1\u3002</div>';
+    setDraftStatus("published");
+    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u4e92\u52a8\u7ba1\u7406</div><div style="font-size:12px;color:#777;margin-bottom:8px">\u8fd9\u91cc\u6309\u5df2\u53d1\u5e03\u7b14\u8bb0\u505a\u4eba\u5de5\u8ddf\u8fdb\u3002\u771f\u5b9e\u9605\u8bfb\u3001\u6536\u85cf\u3001\u8bc4\u8bba\u9700\u8981\u540e\u7eed\u63a5\u5165\u6216\u624b\u52a8\u8bb0\u5f55\u3002</div><div id="xhsEngageOut">\u52a0\u8f7d\u4e2d...</div>';
+    renderEngagePanel();
     return;
   }
   if(name==="analytics"){
-    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u6570\u636e\u5206\u6790</div><div style="font-size:12px;color:#777">\u540e\u7eed\u63a5\u8349\u7a3f\u3001\u53d1\u5e03\u65f6\u95f4\u3001\u9605\u8bfb/\u6536\u85cf/\u8bc4\u8bba\u624b\u52a8\u8bb0\u5f55\uff0c\u7528\u6765\u6c89\u6dc0\u9009\u9898\u6a21\u677f\u3002</div>';
+    panel.innerHTML='<div style="font-weight:600;margin-bottom:8px">\u6570\u636e\u5206\u6790</div><div id="xhsAnalyticsOut" style="font-size:12px;color:#555">\u52a0\u8f7d\u4e2d...</div>';
+    renderXhsAnalytics();
   }
 }
 
@@ -213,6 +218,48 @@ function doXhsResearch(){
 function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function stLabel(s){return{pending:"待发布",published:"已发布",failed:"失败",discarded:"已删除"}[s]||s}
 function fmtDate(d){if(!d)return"-";var x=new Date(d);return x.getFullYear()+"-"+("0"+(x.getMonth()+1)).slice(-2)+"-"+("0"+x.getDate()).slice(-2)+" "+("0"+x.getHours()).slice(-2)+":"+("0"+x.getMinutes()).slice(-2)}
+
+
+function setDraftStatus(status){
+  curStatus=status;
+  var tabs=document.getElementById("tabs").getElementsByClassName("xhs-tab");
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].classList.toggle("on", tabs[i].getAttribute("data-s")===status);
+  }
+  loadStats();
+  loadList();
+}
+
+function sourceArticleLink(id){
+  return id ? '<a href="/static/article.html?id='+id+'" style="color:#2196f3;text-decoration:none">\u6e90\u6587\u7ae0 #'+id+'</a>' : '';
+}
+
+function renderXhsAnalytics(){
+  var box=document.getElementById("xhsAnalyticsOut");
+  fetch(API+"/overview"+(XHS_BIZ?("?business="+encodeURIComponent(XHS_BIZ)):"")).then(function(r){return r.json()}).then(function(d){
+    var counts={};
+    (d.counts||[]).forEach(function(x){counts[x.status]=(counts[x.status]||0)+x.count});
+    var html='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">';
+    html+='<div class="xhs-st">\u5f85\u53d1 '+(counts.pending||0)+'</div>';
+    html+='<div class="xhs-st published">\u5df2\u53d1 '+(counts.published||0)+'</div>';
+    html+='<div class="xhs-st failed">\u5931\u8d25 '+(counts.failed||0)+'</div></div>';
+    html+='<div style="font-weight:600;margin:8px 0 6px">\u6700\u8fd1\u5185\u5bb9</div>';
+    if(!(d.latest||[]).length){html+='\u6682\u65e0\u6570\u636e';}
+    (d.latest||[]).forEach(function(x){html+='<div style="padding:7px 0;border-top:1px solid #eee"><b>#'+x.id+'</b> '+esc(x.title)+' <span style="color:#999">'+stLabel(x.status)+'</span><br>'+sourceArticleLink(x.source_article_id)+'</div>';});
+    box.innerHTML=html;
+  }).catch(function(e){box.textContent='\u6570\u636e\u52a0\u8f7d\u5931\u8d25: '+e});
+}
+
+function renderEngagePanel(){
+  var box=document.getElementById("xhsEngageOut");
+  fetch(API+"/drafts?status=published"+(XHS_BIZ?("&business="+encodeURIComponent(XHS_BIZ)):"")).then(function(r){return r.json()}).then(function(d){
+    var arr=d.drafts||[];
+    if(!arr.length){box.innerHTML='\u6682\u65e0\u5df2\u53d1\u5e03\u7b14\u8bb0\uff0c\u53d1\u5e03\u540e\u4f1a\u5728\u8fd9\u91cc\u505a\u4eba\u5de5\u8ddf\u8fdb\u3002';return}
+    var html='';
+    arr.forEach(function(x){html+='<div style="padding:8px 0;border-top:1px solid #eee"><b>#'+x.id+'</b> '+esc(x.title)+'<br><span style="color:#999">\u5df2\u53d1\u5e03 '+fmtDate(x.published_at||x.updated_at)+'</span></div>';});
+    box.innerHTML=html;
+  }).catch(function(e){box.textContent='\u52a0\u8f7d\u5931\u8d25: '+e});
+}
 
 function loadStats(){
   fetch(API+"/stats"+(XHS_BIZ?("?business="+encodeURIComponent(XHS_BIZ)):"")).then(function(r){return r.json()}).then(function(d){
@@ -234,7 +281,7 @@ function loadList(){
       html+='<div class="xhs-card-top"><span class="xhs-id">#'+x.id+'</span><span class="xhs-st '+x.status+'">'+stLabel(x.status)+'</span></div>';
       html+='<div class="xhs-title">'+esc(x.title)+'</div>';
       html+='<div class="xhs-body">'+esc(x.body)+'</div>';
-      html+='<div class="xhs-meta">'+fmtDate(x.updated_at)+' · '+(x.tags?x.tags.length:0)+' 标签</div>';
+      html+='<div class="xhs-meta">'+fmtDate(x.updated_at)+' \u00b7 '+esc(x.business||'')+' \u00b7 '+(x.tags?x.tags.length:0)+' \u6807\u7b7e '+sourceArticleLink(x.source_article_id)+'</div>';
       html+='<div class="xhs-acts">';
       html+='<button class="xhs-btn v" onclick="viewDraft('+x.id+')">详情</button>';
       html+='<button class="xhs-btn e" onclick="editDraft('+x.id+')"'+(canPub?"":" disabled style=opacity:.4")+'>编辑</button>';

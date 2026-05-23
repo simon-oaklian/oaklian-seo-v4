@@ -384,6 +384,41 @@ def xhs_research_search(payload: XhsResearchReq):
         return {"status": "error", "message": str(e)}
 
 
+
+@app.get("/api/xhs/overview")
+def xhs_overview(business: str = ""):
+    where = "WHERE business=%s" if business else ""
+    args = (business,) if business else ()
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT business, status, COUNT(*) FROM xhs_drafts "
+                + where +
+                " GROUP BY business, status ORDER BY business, status",
+                args,
+            )
+            rows = cur.fetchall()
+            cur.execute(
+                "SELECT id, business, status, title, updated_at, source_article_id "
+                "FROM xhs_drafts " + where + " ORDER BY updated_at DESC LIMIT 10",
+                args,
+            )
+            latest = cur.fetchall()
+    return {
+        "counts": [
+            {"business": r[0], "status": r[1], "count": r[2]}
+            for r in rows
+        ],
+        "latest": [
+            {
+                "id": r[0], "business": r[1], "status": r[2], "title": r[3],
+                "updated_at": r[4].isoformat() if r[4] else None,
+                "source_article_id": r[5],
+            }
+            for r in latest
+        ],
+    }
+
 @app.get("/api/xhs/drafts")
 def xhs_list(status: Optional[str] = None, business: str = ""):
     where = []
@@ -398,13 +433,13 @@ def xhs_list(status: Optional[str] = None, business: str = ""):
     with db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, status, title, body, tags, updated_at, business, account_id FROM xhs_drafts "
+                "SELECT id, status, title, body, tags, updated_at, business, account_id, source_article_id, created_at, published_at FROM xhs_drafts "
                 + where_sql +
                 " ORDER BY updated_at DESC LIMIT 50",
                 tuple(args)
             )
             rows = cur.fetchall()
-    return {"drafts": [{"id": r[0], "status": r[1], "title": r[2], "body": r[3], "tags": r[4] if r[4] else [], "updated_at": r[5].isoformat() if r[5] else None, "business": r[6], "account_id": r[7]} for r in rows]}
+    return {"drafts": [{"id": r[0], "status": r[1], "title": r[2], "body": r[3], "tags": r[4] if r[4] else [], "updated_at": r[5].isoformat() if r[5] else None, "business": r[6], "account_id": r[7], "source_article_id": r[8], "created_at": r[9].isoformat() if r[9] else None, "published_at": r[10].isoformat() if r[10] else None} for r in rows]}
 
 @app.get("/api/xhs/drafts/{draft_id}")
 def xhs_get(draft_id: int):

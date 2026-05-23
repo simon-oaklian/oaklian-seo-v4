@@ -100,7 +100,7 @@
 <body>
 <header>
   <h1>数据后台</h1>
-  <a href="/static/home.html">← 网站</a>
+  <a id="backLink" href="/static/home.html">&#8592; &#32593;&#31449;</a>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -129,6 +129,25 @@ const main = document.getElementById('main');
 let currentChart = null;
 let lastBusinessData = null;
 let state = { view: 'summary', days: 30 };
+
+function articleListUrl(view) {
+  return view && view !== 'summary'
+    ? '/static/articles.html?business=' + encodeURIComponent(view)
+    : '/static/home.html';
+}
+
+function updateBackLink() {
+  const back = document.getElementById('backLink');
+  if (!back) return;
+  if (state.view && state.view !== 'summary') {
+    back.href = articleListUrl(state.view);
+    back.textContent = '\u2190 \u6587\u7ae0';
+  } else {
+    back.href = '/static/home.html';
+    back.textContent = '\u2190 \u7f51\u7ad9';
+  }
+}
+
 
 function destroyChart() {
   if (currentChart) { currentChart.destroy(); currentChart = null; }
@@ -370,6 +389,7 @@ function renderBusiness(data) {
 async function load() {
   setActiveTab(state.view);
   setActiveRange(state.days);
+  updateBackLink();
   main.innerHTML = '<div class="empty-state">加载中…</div>';
   try {
     if (state.view === 'summary') {
