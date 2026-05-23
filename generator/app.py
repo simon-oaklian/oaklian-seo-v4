@@ -313,16 +313,75 @@ from city_spider import router as city_router
 
 # === XHS DRAFTS API ===
 @app.get("/api/xhs/stats")
-def xhs_stats():
+def xhs_stats(business: str = ""):
+    where = "WHERE business=%s" if business else ""
+    args = (business,) if business else ()
     with db_conn() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM xhs_drafts")
+            cur.execute("SELECT COUNT(*) FROM xhs_drafts " + where, args)
             total = cur.fetchone()[0]
-            cur.execute("SELECT COUNT(*) FROM xhs_drafts WHERE status='pending'")
+            cur.execute("SELECT COUNT(*) FROM xhs_drafts " + (where + " AND " if business else "WHERE ") + "status='pending'", args)
             pending = cur.fetchone()[0]
-            cur.execute("SELECT COUNT(*) FROM xhs_drafts WHERE status='published'")
+            cur.execute("SELECT COUNT(*) FROM xhs_drafts " + (where + " AND " if business else "WHERE ") + "status='published'", args)
             published = cur.fetchone()[0]
-    return {"total": total, "pending": pending, "published": published}
+            cur.execute("SELECT COUNT(*) FROM xhs_drafts " + (where + " AND " if business else "WHERE ") + "status='failed'", args)
+            failed = cur.fetchone()[0]
+    return {"total": total, "pending": pending, "published": published, "failed": failed}
+
+
+@app.get("/api/xhs/accounts")
+def xhs_accounts(business: str = ""):
+    where = "WHERE business=%s" if business else ""
+    args = (business,) if business else ()
+    with db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT id, business, display_name, account_label, enabled, "
+                "COALESCE(mcp_publish_url,''), COALESCE(mcp_status_url,''), updated_at "
+                "FROM xhs_accounts " + where + " ORDER BY id",
+                args,
+            )
+            rows = cur.fetchall()
+    return {"accounts": [
+        {
+            "id": r[0], "business": r[1], "display_name": r[2],
+            "account_label": r[3], "enabled": r[4],
+            "has_publish_channel": bool(r[5]), "has_status_channel": bool(r[6]),
+            "updated_at": r[7].isoformat() if r[7] else None,
+        }
+        for r in rows
+    ]}
+
+
+class XhsResearchReq(BaseModel):
+    keyword: str
+    business: str = ""
+    sort_by: str = "\u7efc\u5408"
+    note_type: str = "\u4e0d\u9650"
+    publish_time: str = "\u4e0d\u9650"
+
+
+@app.post("/api/xhs/research/search")
+def xhs_research_search(payload: XhsResearchReq):
+    keyword = (payload.keyword or "").strip()
+    if not keyword:
+        raise HTTPException(400, "keyword required")
+    if payload.business:
+        keyword = f"{keyword} {payload.business}"
+    try:
+        return xhs_mcp_raw("tools/call", {
+            "name": "search_feeds",
+            "arguments": {
+                "keyword": keyword,
+                "filters": {
+                    "sort_by": payload.sort_by,
+                    "note_type": payload.note_type,
+                    "publish_time": payload.publish_time,
+                },
+            },
+        })
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.get("/api/xhs/drafts")
@@ -339,23 +398,23 @@ def xhs_list(status: Optional[str] = None, business: str = ""):
     with db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, status, title, body, tags, updated_at FROM xhs_drafts "
+                "SELECT id, status, title, body, tags, updated_at, business, account_id FROM xhs_drafts "
                 + where_sql +
                 " ORDER BY updated_at DESC LIMIT 50",
                 tuple(args)
             )
             rows = cur.fetchall()
-    return {"drafts": [{"id": r[0], "status": r[1], "title": r[2], "body": r[3], "tags": r[4] if r[4] else [], "updated_at": r[5].isoformat() if r[5] else None} for r in rows]}
+    return {"drafts": [{"id": r[0], "status": r[1], "title": r[2], "body": r[3], "tags": r[4] if r[4] else [], "updated_at": r[5].isoformat() if r[5] else None, "business": r[6], "account_id": r[7]} for r in rows]}
 
 @app.get("/api/xhs/drafts/{draft_id}")
 def xhs_get(draft_id: int):
     with db_conn() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, status, title, body, tags, created_at, updated_at, published_at FROM xhs_drafts WHERE id=%s", (draft_id,))
+            cur.execute("SELECT id, status, title, body, tags, created_at, updated_at, published_at, business, account_id FROM xhs_drafts WHERE id=%s", (draft_id,))
             row = cur.fetchone()
     if not row:
         raise HTTPException(404, "Draft not found")
-    return {"id": row[0], "status": row[1], "title": row[2], "body": row[3], "tags": row[4] if row[4] else [], "created_at": row[5].isoformat() if row[5] else None, "updated_at": row[6].isoformat() if row[6] else None, "published_at": row[7].isoformat() if row[7] else None}
+    return {"id": row[0], "status": row[1], "title": row[2], "body": row[3], "tags": row[4] if row[4] else [], "created_at": row[5].isoformat() if row[5] else None, "updated_at": row[6].isoformat() if row[6] else None, "published_at": row[7].isoformat() if row[7] else None, "business": row[8], "account_id": row[9]}
 
 
 class XhsUpdateReq(BaseModel):
@@ -1948,5 +2007,5 @@ def seed_keywords_delete(business: str, seed_id: int):
 
 
 # === XHS MCP ROUTES ===
-from xhs_mcp_routes import router as xhs_mcp_router
+from xhs_mcp_routes import router as xhs_mcp_router, mcp_raw as xhs_mcp_raw
 app.include_router(xhs_mcp_router)

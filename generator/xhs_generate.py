@@ -21,7 +21,13 @@ sys.path.insert(0, '/app')
 from note_to_article import call_openrouter
 import psycopg2
 
-PROMPT_FILE = '/app/prompts/xhs_oaklian_zh.txt'
+PROMPT_FILES = {
+    'oaklian': '/app/prompts/xhs_oaklian_zh.txt',
+    'jnono': '/app/prompts/xhs_jnono_zh.txt',
+    'pricvo': '/app/prompts/xhs_pricvo_zh.txt',
+    'recossi': '/app/prompts/xhs_recossi_zh.txt',
+}
+
 
 
 def content_fingerprint(title: str, body: str) -> str:
@@ -35,9 +41,6 @@ def main():
         sys.exit(1)
 
     article_id = int(sys.argv[1])
-
-    with open(PROMPT_FILE) as f:
-        system_prompt = f.read()
 
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
     cur = conn.cursor()
@@ -53,11 +56,25 @@ def main():
         sys.exit(1)
     business, src_title, body_md, src_images = row
 
-    if business not in ('oaklian', 'jnono', 'pricvo', 'recossi'):
-        print(f'错误: 不支持的 business={business}')
+    if business not in PROMPT_FILES:
+        print(f'error: unsupported business={business}')
         sys.exit(1)
 
-    # 调 LLM 改写
+    prompt_file = PROMPT_FILES[business]
+    if not os.path.exists(prompt_file):
+        print(f'error: prompt file not found: {prompt_file}')
+        sys.exit(1)
+    with open(prompt_file, encoding='utf-8') as f:
+        system_prompt = f.read()
+
+    cur.execute(
+        "SELECT id FROM xhs_accounts WHERE business=%s AND enabled=true ORDER BY id LIMIT 1",
+        (business,)
+    )
+    acct_row = cur.fetchone()
+    account_id = acct_row[0] if acct_row else None
+
+    # ? LLM ??
     user_content = f'源文章标题:{src_title}\n\n源文章正文:\n{body_md}'
     print('=== 调用 LLM 生成中 ===')
     result = call_openrouter(system_prompt, user_content)
@@ -114,11 +131,11 @@ def main():
     cur.execute(
         """
         INSERT INTO xhs_drafts
-          (source_article_id, business, title, body, tags, content_hash, status)
-        VALUES (%s, %s, %s, %s, %s, %s, 'pending')
+          (source_article_id, business, account_id, title, body, tags, content_hash, status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending')
         RETURNING id
         """,
-        (article_id, business, title, bodytext,
+        (article_id, business, account_id, title, bodytext,
          json.dumps(tags, ensure_ascii=False), fp)
     )
     new_id = cur.fetchone()[0]
@@ -127,6 +144,8 @@ def main():
     print(f'✅ 草稿已存入 xhs_drafts, id={new_id}, status=pending')
     print(f'   标题: {title}')
     print(f'   正文字数: {len(bodytext)}')
+    print(f'   business: {business}')
+    print(f'   account_id: {account_id if account_id else "not connected"}')
     print(f'   tags: {tags}')
     print(f'   指纹: {fp[:16]}...')
     print()
