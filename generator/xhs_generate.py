@@ -28,14 +28,16 @@ PROMPT_FILES = {
     'recossi': '/app/prompts/xhs_recossi_zh.txt',
 }
 
-COMMON_CHINESE_OUTPUT_RULES = """
+COMMON_XHS_STYLE_RULES = """
 
-# Shared Xiaohongshu output rule
-The source article may be English, Chinese, or mixed. Always translate, localize,
-and rewrite it into Simplified Chinese Xiaohongshu copy. Do not keep the source as
-an English summary. Brand names and short technical terms such as CSLB, permit,
-vanity, remodel, shipping, solid wood may stay in English only when natural.
-The JSON title and body must be primarily Simplified Chinese.
+# Shared Xiaohongshu style rule
+Follow the same logic as the existing Oaklian XHS workflow: write the main copy
+in natural Simplified Chinese for Xiaohongshu readers, while preserving common
+English brand names, exam names, product names, city names, and trade terms when
+that is how the audience would naturally say them. Do not mechanically translate
+terms such as CSLB, permit, vanity, remodel, grout, shipping, solid wood, ADU, GC,
+or similar domain words. The goal is natural Chinese copy with useful English
+terms, not forced full translation.
 """
 
 
@@ -43,11 +45,11 @@ def cjk_count(text: str) -> int:
     return len(re.findall(r'[\u3400-\u9fff]', text or ''))
 
 
-def ensure_chinese_output(title: str, body: str):
+def ensure_xhs_language(title: str, body: str):
     combined = (title or '') + '\n' + (body or '')
     chinese_chars = cjk_count(combined)
-    if chinese_chars < 20:
-        print('error: generated XHS draft is not Chinese enough; refusing to save')
+    if chinese_chars < 8:
+        print('error: generated XHS draft has almost no Chinese text; refusing to save')
         print('title preview:', (title or '')[:80])
         print('body preview:', (body or '')[:180])
         sys.exit(1)
@@ -88,7 +90,7 @@ def main():
         print(f'error: prompt file not found: {prompt_file}')
         sys.exit(1)
     with open(prompt_file, encoding='utf-8') as f:
-        system_prompt = f.read() + COMMON_CHINESE_OUTPUT_RULES
+        system_prompt = f.read() + COMMON_XHS_STYLE_RULES
 
     cur.execute(
         "SELECT id FROM xhs_accounts WHERE business=%s AND enabled=true ORDER BY id LIMIT 1",
@@ -114,7 +116,7 @@ def main():
     title = draft['title']
     bodytext = draft['body']
     tags = draft.get('tags', [])
-    ensure_chinese_output(title, bodytext)
+    ensure_xhs_language(title, bodytext)
 
     fp = content_fingerprint(title, bodytext)
 
