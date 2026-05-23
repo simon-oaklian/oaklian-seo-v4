@@ -100,7 +100,7 @@
 <body>
 <header>
   <h1>数据后台</h1>
-  <a id="backLink" href="/static/home.html">&#8592; &#32593;&#31449;</a>
+  <a id="backLink" href="/static/home.html" title="Back" aria-label="Back" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:32px;padding:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></a>
 </header>
 
 <nav class="tabs" id="tabs">
@@ -128,6 +128,7 @@ const VALID_VIEWS = ['summary', 'oaklian', 'pricvo', 'jnono', 'recossi'];
 const main = document.getElementById('main');
 let currentChart = null;
 let lastBusinessData = null;
+const BACK_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>';
 let state = { view: 'summary', days: 30 };
 
 function articleListUrl(view) {
@@ -141,10 +142,10 @@ function updateBackLink() {
   if (!back) return;
   if (state.view && state.view !== 'summary') {
     back.href = articleListUrl(state.view);
-    back.textContent = '\u2190 \u6587\u7ae0';
+    back.innerHTML = BACK_ICON;
   } else {
     back.href = '/static/home.html';
-    back.textContent = '\u2190 \u7f51\u7ad9';
+    back.innerHTML = BACK_ICON;
   }
 }
 
