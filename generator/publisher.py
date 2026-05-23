@@ -16,6 +16,120 @@ SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
 LIST_BLOCK_START = "<!-- INSIGHTS_LIST_START -->"
 LIST_BLOCK_END = "<!-- INSIGHTS_LIST_END -->"
 
+
+JNONO_CF_SNIPPET = "<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{\"token\": \"4b2bcc256ac741e8b45dcc4ad8f69bef\"}'></script><!-- End Cloudflare Web Analytics -->"
+
+JNONO_ARTICLE_TEMPLATE = """<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{title_html} | PrepLicense</title>
+  <meta name="description" content="{description_html}" />
+  <link rel="canonical" href="{canonical}" />
+  <meta property="og:title" content="{title_html}" />
+  <meta property="og:description" content="{description_html}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="{canonical}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;800&family=Barlow:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css?v=20260317d" />
+  <script type="application/ld+json">
+{schema_json}
+  </script>
+  <style>
+    body{{background:#f6f7fb;color:#182033;font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}}
+    .blog-shell{{max-width:820px;margin:0 auto;padding:34px 20px 70px;}}
+    .blog-top{{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:34px;}}
+    .blog-brand{{font-weight:800;color:#14213d;text-decoration:none;font-size:20px;}}
+    .blog-nav{{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;}}
+    .blog-nav a{{color:#556070;text-decoration:none;}}
+    .blog-card{{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(20,33,61,.06);}}
+    .eyebrow{{color:#b8965a;font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 12px;}}
+    h1{{font-size:30px;line-height:1.35;margin:0 0 12px;color:#14213d;}}
+    .meta{{color:#8a92a3;font-size:13px;margin-bottom:28px;}}
+    article{{font-size:17px;line-height:1.95;}}
+    article h2{{font-size:23px;line-height:1.45;color:#14213d;margin:38px 0 12px;}}
+    article h3{{font-size:19px;color:#14213d;margin:28px 0 10px;}}
+    article p{{margin:0 0 18px;}}
+    article ul,article ol{{padding-left:24px;margin:0 0 20px;}}
+    article li{{margin-bottom:8px;}}
+    article code{{background:#f0f2f5;padding:2px 6px;border-radius:5px;}}
+    .blog-footer{{margin-top:28px;color:#8a92a3;font-size:13px;text-align:center;}}
+    @media(max-width:640px){{.blog-shell{{padding:22px 14px 52px}}.blog-card{{padding:20px;border-radius:14px}}h1{{font-size:25px}}article{{font-size:16px}}}}
+  </style>
+</head>
+<body>
+  <main class="blog-shell">
+    <header class="blog-top">
+      <a class="blog-brand" href="/">PrepLicense</a>
+      <nav class="blog-nav">
+        <a href="/blog/">备考文章</a>
+        <a href="/pricing.html">会员方案</a>
+        <a href="/">开始训练</a>
+      </nav>
+    </header>
+    <section class="blog-card">
+      <p class="eyebrow">CSLB 备考文章</p>
+      <h1>{title_html}</h1>
+      <p class="meta">发布于 {published_human}</p>
+      <article>
+{body_html}
+      </article>
+    </section>
+    <footer class="blog-footer">© PrepLicense · CSLB 中文备考训练</footer>
+  </main>
+  {cf_snippet}
+</body>
+</html>
+"""
+
+JNONO_INDEX_TEMPLATE = """<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSLB 备考文章 | PrepLicense</title>
+  <meta name="description" content="PrepLicense 的 CSLB 中文备考文章，整理法律题、长句理解、考试陷阱和复习方法。" />
+  <link rel="canonical" href="https://jnono.com/blog/" />
+  <link rel="stylesheet" href="/styles.css?v=20260317d" />
+  <style>
+    body{{background:#f6f7fb;color:#182033;font-family:'Noto Sans SC',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}}
+    .blog-shell{{max-width:900px;margin:0 auto;padding:34px 20px 70px;}}
+    .blog-top{{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:34px;}}
+    .blog-brand{{font-weight:800;color:#14213d;text-decoration:none;font-size:20px;}}
+    .blog-nav{{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;}}
+    .blog-nav a{{color:#556070;text-decoration:none;}}
+    .hero{{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:28px;margin-bottom:18px;box-shadow:0 10px 30px rgba(20,33,61,.06);}}
+    h1{{font-size:32px;line-height:1.3;margin:0 0 8px;color:#14213d;}}
+    .desc{{color:#6b7280;line-height:1.75;margin:0;}}
+    .article-list{{display:grid;gap:14px;}}
+    .article-item{{display:block;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px;text-decoration:none;color:inherit;}}
+    .article-item h2{{font-size:20px;color:#14213d;margin:0 0 8px;line-height:1.45;}}
+    .article-item p{{margin:0 0 8px;color:#556070;line-height:1.65;}}
+    .article-item time{{color:#9aa2af;font-size:13px;}}
+  </style>
+</head>
+<body>
+  <main class="blog-shell">
+    <header class="blog-top">
+      <a class="blog-brand" href="/">PrepLicense</a>
+      <nav class="blog-nav"><a href="/">首页</a><a href="/pricing.html">会员方案</a></nav>
+    </header>
+    <section class="hero">
+      <h1>CSLB 中文备考文章</h1>
+      <p class="desc">真实备考笔记整理，聚焦法律题长句、常见陷阱和复习方法。</p>
+    </section>
+    <section class="article-list">
+{items_html}
+    </section>
+  </main>
+  {cf_snippet}
+</body>
+</html>
+"""
+
 ARTICLE_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -304,7 +418,91 @@ def _wrap_images_in_figures(body_html, sizes):
     return img_pattern.sub(repl, body_html)
 
 
+
+def _render_jnono_article_html(article, cfg):
+    meta = _coerce_meta(article.get('meta_json'))
+    title = meta.get('title') or 'Untitled'
+    description = meta.get('meta_description') or ''
+    slug = meta.get('slug') or _slugify(title)
+    canonical = f"{cfg['domain']}{cfg['insights_url_prefix']}/{slug}/"
+    schema_org = meta.get('schema_org') or {}
+    if 'url' not in schema_org:
+        schema_org['url'] = canonical
+    body_html = md_lib.markdown(article.get('draft_md') or '', extensions=['extra', 'sane_lists'])
+    pub = _coerce_dt(article.get('published_at'))
+    return JNONO_ARTICLE_TEMPLATE.format(
+        title_html=html.escape(title),
+        description_html=html.escape(description),
+        canonical=canonical,
+        schema_json=json.dumps(schema_org, ensure_ascii=False, indent=2),
+        body_html=body_html,
+        published_human=pub.strftime('%Y-%m-%d'),
+        cf_snippet=JNONO_CF_SNIPPET,
+    )
+
+
+def _write_jnono_index(db_conn, cfg, business):
+    articles = _list_published_articles(db_conn, business)
+    items = []
+    for a in articles:
+        date_str = a['published_at'].strftime('%Y-%m-%d') if a['published_at'] else ''
+        desc = html.escape(a.get('description') or '')
+        items.append(
+            f'<a class="article-item" href="{cfg["insights_url_prefix"]}/{html.escape(a["slug"])}/">'
+            f'<h2>{html.escape(a["title"])}</h2>'
+            f'<p>{desc}</p>'
+            f'<time>{date_str}</time>'
+            f'</a>'
+        )
+    if not items:
+        items.append('<div class="article-item"><h2>文章整理中</h2><p>新的 CSLB 中文备考文章会陆续发布。</p></div>')
+    index_path = cfg['root_path'] / cfg['index_html_path']
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(JNONO_INDEX_TEMPLATE.format(items_html='\n'.join(items), cf_snippet=JNONO_CF_SNIPPET), encoding='utf-8')
+
+
+def _update_xml_sitemap(canonical_url, lastmod, cfg):
+    sitemap_path = cfg['root_path'] / cfg.get('sitemap_path', 'sitemap.xml')
+    ns = SITEMAP_NS
+    ET.register_namespace('', ns)
+    if sitemap_path.exists():
+        tree = ET.parse(sitemap_path)
+        root = tree.getroot()
+    else:
+        root = ET.Element(f'{{{ns}}}urlset')
+        tree = ET.ElementTree(root)
+    found = None
+    for url in root.findall(f'{{{ns}}}url'):
+        loc = url.find(f'{{{ns}}}loc')
+        if loc is not None and loc.text == canonical_url:
+            found = url
+            break
+    if found is None:
+        found = ET.SubElement(root, f'{{{ns}}}url')
+        ET.SubElement(found, f'{{{ns}}}loc').text = canonical_url
+    lastmod_el = found.find(f'{{{ns}}}lastmod')
+    if lastmod_el is None:
+        lastmod_el = ET.SubElement(found, f'{{{ns}}}lastmod')
+    lastmod_el.text = _coerce_dt(lastmod).date().isoformat()
+    tree.write(sitemap_path, encoding='utf-8', xml_declaration=True)
+
+
+def _ensure_jnono_robots(cfg):
+    robots_path = cfg['root_path'] / cfg.get('robots_path', 'robots.txt')
+    text = robots_path.read_text(encoding='utf-8') if robots_path.exists() else 'User-agent: *\nAllow: /\n'
+    if 'Allow: /blog/' not in text:
+        lines = text.splitlines()
+        insert_at = 1 if lines and lines[0].lower().startswith('user-agent') else 0
+        lines.insert(insert_at, 'Allow: /blog/')
+        text = '\n'.join(lines).rstrip() + '\n'
+    sitemap_line = f"Sitemap: {cfg['domain']}/sitemap.xml"
+    if sitemap_line not in text:
+        text = text.rstrip() + '\n\n' + sitemap_line + '\n'
+    robots_path.write_text(text, encoding='utf-8')
+
 def _render_article_html(article, cfg):
+    if cfg.get('template') == 'jnono':
+        return _render_jnono_article_html(article, cfg)
     meta = _coerce_meta(article.get('meta_json'))
     title = meta.get('title') or 'Untitled'
     description = meta.get('meta_description') or ''
@@ -343,12 +541,14 @@ def _render_article_html(article, cfg):
 
 
 def _list_published_articles(db_conn, business):
+    cfg = get_site_config(business)
+    language = cfg.get('language', 'en')
     cur = db_conn.cursor()
     cur.execute("""
         SELECT id, meta_json, published_at FROM articles
-        WHERE business=%s AND language='en' AND status='published'
+        WHERE business=%s AND language=%s AND status='published'
         ORDER BY published_at DESC NULLS LAST, id DESC
-    """, (business,))
+    """, (business, language))
     out = []
     for aid, meta, pub_at in cur.fetchall():
         meta = _coerce_meta(meta)
@@ -393,6 +593,9 @@ def _render_list_block(articles, cfg):
 
 
 def _update_index(db_conn, cfg, business):
+    if cfg.get('template') == 'jnono':
+        _write_jnono_index(db_conn, cfg, business)
+        return
     index_path = cfg['root_path'] / cfg['index_html_path']
     if not index_path.exists():
         raise RuntimeError(f"Insights index not found: {index_path}")
@@ -417,6 +620,10 @@ def _update_index(db_conn, cfg, business):
     index_path.write_text(text, encoding='utf-8')
 
 def _update_sitemap(canonical_url, lastmod, cfg):
+    if cfg.get('template') == 'jnono':
+        _update_xml_sitemap(canonical_url, lastmod, cfg)
+        _ensure_jnono_robots(cfg)
+        return
     # Delegate to app.py's rebuild_robots_and_sitemap for consistent formatting
     # This avoids the "squished on one line" bug from ElementTree append
     try:
@@ -435,8 +642,9 @@ def publish(article, db_conn):
         except NotImplementedError as e:
             return {'ok': False, 'error': str(e)}
 
-        if article.get('language') != 'en':
-            return {'ok': False, 'error': f"only en supported (got {article.get('language')})"}
+        expected_language = cfg.get('language', 'en')
+        if article.get('language') != expected_language:
+            return {'ok': False, 'error': f"only {expected_language} supported (got {article.get('language')})"}
         if not article.get('draft_md'):
             return {'ok': False, 'error': 'draft_md is empty'}
 

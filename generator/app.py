@@ -956,6 +956,8 @@ def article_list(status: str = "pending", limit: int = 20, business: str = ""):
             return None
         if row[1] == "oaklian" and row[2] == "en":
             return f"https://oaklian.com/en/insights/{slug}/"
+        if row[1] == "jnono" and row[2] == "zh":
+            return f"https://jnono.com/blog/{slug}/"
         return None
 
     return {
@@ -1073,10 +1075,13 @@ def article_publish(article_id: int):
 
             if status != "pending":
                 raise HTTPException(409, f"article status is '{status}', only 'pending' can be published")
-            if business != "oaklian":
-                raise HTTPException(400, f"only business=oaklian supported in Sprint 2b (got {business})")
-            if language != "en":
-                raise HTTPException(400, f"only language=en supported in Sprint 2b (got {language})")
+            try:
+                site_cfg = publisher.get_site_config(business)
+            except Exception as e:
+                raise HTTPException(400, str(e))
+            expected_language = site_cfg.get("language", "en")
+            if language != expected_language:
+                raise HTTPException(400, f"only language={expected_language} supported for business={business} (got {language})")
             if not draft_md:
                 raise HTTPException(400, "draft_md is empty, cannot publish")
 
