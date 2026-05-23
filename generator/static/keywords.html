@@ -330,7 +330,7 @@ function bizLabel(b) {
 
 const state = {
   tab: 'today',
-  biz: new URLSearchParams(location.search).get('biz') || ''
+  biz: new URLSearchParams(location.search).get('business') || new URLSearchParams(location.search).get('biz') || ''
 };
 
 function setQueryBiz() {
@@ -492,7 +492,7 @@ document.addEventListener('click', function(ev) {
       if (biz) sessionStorage.setItem('seo_v4_primary_business_hint', biz);
     } catch (e) { /* sessionStorage may fail in private mode; we proceed */ }
   }
-  window.location.href = '/static/new.html';
+  window.location.href = '/static/new.html' + (biz ? ('?business=' + encodeURIComponent(biz)) : '');
 });
 /* === SPRINT_2L1B_WRITE_BTN END === */
 
@@ -533,7 +533,7 @@ setTab('today');
 
 // sprint2k1c-a4: schedule control panel logic
 (function(){
-  const BIZ_LABEL = {oaklian:'Oaklian', pricvo:'Pricvo', recossi:'Recossi'};
+  const BIZ_LABEL = {oaklian:'Oaklian', jnono:'jnono', pricvo:'Pricvo', recossi:'Recossi'};
   const MODE_LABEL = {manual:'手动', weekly:'每周', monthly:'每月'};
   const panel = document.getElementById('sched-panel');
   const toggle = document.getElementById('sched-toggle');

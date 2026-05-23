@@ -571,6 +571,7 @@ _XHS_BUSINESSES = [
     {"key": "oaklian", "name": "Oaklian", "color": "#1e2a4a"},
     {"key": "jnono",   "name": "jnono",   "color": "#b8965a"},
     {"key": "pricvo",  "name": "Pricvo",  "color": "#c0392b"},
+    {"key": "recossi", "name": "Recossi", "color": "#5a8c6a"},
 ]
 
 @app.get("/api/businesses")
@@ -923,7 +924,7 @@ def article_list(status: str = "pending", limit: int = 20, business: str = ""):
     valid_statuses = {"pending", "published", "discarded", "failed", "all"}
     if status not in valid_statuses:
         raise HTTPException(400, f"status must be one of {sorted(valid_statuses)}")
-    valid_biz = {"oaklian", "jnono", "pricvo"}
+    valid_biz = {"oaklian", "jnono", "pricvo", "recossi"}
     if business and business not in valid_biz:
         raise HTTPException(400, f"business must be one of {sorted(valid_biz)}")
     where = []

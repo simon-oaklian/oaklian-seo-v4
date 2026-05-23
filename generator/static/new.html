@@ -200,6 +200,7 @@
     <button class="btn" data-biz="oaklian">Oaklian</button>
     <button class="btn" data-biz="jnono">jnono</button>
     <button class="btn" data-biz="pricvo">Pricvo</button>
+    <button class="btn" data-biz="recossi">Recossi</button>
   </div>
 
   <label>选语言</label>
@@ -289,7 +290,7 @@ document.querySelectorAll('#biz-group .btn').forEach(b => {
     document.querySelectorAll('#biz-group .btn').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
     selectedBiz = b.dataset.biz;
-    if (selectedBiz === 'oaklian' || selectedBiz === 'pricvo') {
+    if (selectedBiz === 'oaklian' || selectedBiz === 'pricvo' || selectedBiz === 'recossi') {
       document.querySelectorAll('#lang-group .btn').forEach(x => x.classList.remove('active'));
       const enBtn = document.querySelector('#lang-group .btn[data-lang="en"]');
       enBtn.classList.add('active');

@@ -22,7 +22,7 @@ LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.4"))
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
 
-VALID_BUSINESSES = {"oaklian", "jnono", "pricvo"}
+VALID_BUSINESSES = {"oaklian", "jnono", "pricvo", "recossi"}
 VALID_LANGUAGES = {"en", "zh"}
 
 
