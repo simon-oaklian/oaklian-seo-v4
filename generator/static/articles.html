@@ -61,7 +61,7 @@ var curStatus='pending';
 var BIZ_NAME={oaklian:'Oaklian',jnono:'jnono',pricvo:'Pricvo'};
 document.getElementById('hdr').textContent=(BIZ_NAME[BIZ]||BIZ||'文章');
 var _bq=BIZ?('?business='+BIZ):'';
-document.getElementById('ic-ana').href='/static/analytics.html'+_bq;
+document.getElementById('ic-ana').href=BIZ?('/static/analytics.html#'+BIZ):'/static/analytics.html';
 document.getElementById('ic-kw').href='/static/keywords.html'+_bq;
 document.getElementById('ic-new').href='/static/new.html'+_bq;
 document.getElementById('ic-xhs').href='/static/xhs.html'+_bq;

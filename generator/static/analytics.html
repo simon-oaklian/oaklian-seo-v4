@@ -124,6 +124,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const BIZ_NAMES = { oaklian: 'Oaklian', pricvo: 'Pricvo', jnono: 'Jnono', recossi: 'Recossi' };
+const VALID_VIEWS = ['summary', 'oaklian', 'pricvo', 'jnono', 'recossi'];
 const main = document.getElementById('main');
 let currentChart = null;
 let lastBusinessData = null;
@@ -385,8 +386,11 @@ async function load() {
 
 function applyHash() {
   const h = (location.hash || '#summary').slice(1);
-  if (['summary', 'oaklian', 'pricvo', 'jnono', 'recossi'].includes(h)) {
-    state.view = h;
+  const params = new URLSearchParams(location.search);
+  const bizParam = params.get('business');
+  const target = h && h !== 'summary' ? h : (bizParam || h);
+  if (VALID_VIEWS.includes(target)) {
+    state.view = target;
   } else {
     state.view = 'summary';
   }
@@ -394,7 +398,10 @@ function applyHash() {
 }
 
 document.querySelectorAll('#tabs .tab').forEach(t => {
-  t.addEventListener('click', () => { location.hash = '#' + t.dataset.key; });
+  t.addEventListener('click', () => {
+    if (location.search) { history.replaceState(null, '', location.pathname + location.hash); }
+    location.hash = '#' + t.dataset.key;
+  });
 });
 document.querySelectorAll('#range button').forEach(b => {
   b.addEventListener('click', () => {
